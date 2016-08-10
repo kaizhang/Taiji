@@ -1,0 +1,30 @@
+resolver: lts-6.10
+
+packages:
+- '.'
+
+- location:
+    git: https://github.com/kaizhang/SciFlow.git
+    commit: 3947cfad8290040091423de0830966a037ce816f
+
+- location:
+    git: https://github.com/kaizhang/bio-experiments.git
+    commit: 81527a778baaf8f24dd02639ac96c7602045d81e
+
+- location:
+    git: https://github.com/kaizhang/bio-pipelines.git
+    commit: c299f35055a8e21875b2f98e88a9da079d5c4dba
+
+- location:
+    git: git@github.com:kaizhang/bioinformatics-toolkit.git
+    commit: d5eab03495f9da63cd89a51a8ac94d2bb010a207
+
+extra-deps:
+    - samtools-0.2.4.3
+    - haskell-igraph-0.1.0
+    - drmaa-0.1.0.1
+
+flags:
+    SciFlow:
+        debug: true
+        sge: true
