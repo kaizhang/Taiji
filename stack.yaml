@@ -5,19 +5,19 @@ packages:
 
 - location:
     git: https://github.com/kaizhang/SciFlow.git
-    commit: 3947cfad8290040091423de0830966a037ce816f
+    commit: fdd59558a980e52dafafefe295cd1d07d2395dd2
 
 - location:
     git: https://github.com/kaizhang/bio-experiments.git
-    commit: 81527a778baaf8f24dd02639ac96c7602045d81e
+    commit: f45d73d38395bf5a51b50e893ccbcf39b3c97f2a
 
 - location:
     git: https://github.com/kaizhang/bio-pipelines.git
-    commit: c299f35055a8e21875b2f98e88a9da079d5c4dba
+    commit: 5d0ee26315f6908607d5fbd960a0ff728b5d5e9b
 
 - location:
     git: git@github.com:kaizhang/bioinformatics-toolkit.git
-    commit: d5eab03495f9da63cd89a51a8ac94d2bb010a207
+    commit: d52ffdca7daf8f9424b01b470d0cbfc35723506d
 
 extra-deps:
     - samtools-0.2.4.3

@@ -28,7 +28,7 @@ import Data.Double.Conversion.ByteString (toShortest)
 
 import           Scientific.Workflow
 
-pageRank :: [Experiment] -> IO ([T.Text], [B.ByteString], [[Double]])
+pageRank :: [Experiment a] -> IO ([T.Text], [B.ByteString], [[Double]])
 pageRank es = do
     results <- forM es $ \e -> do
         gr <- buildNet e
@@ -41,22 +41,25 @@ pageRank es = do
             in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
     return (expNames, genes, ranks)
 
-buildNet :: Experiment -> IO (LGraph D B.ByteString ())
+buildNet :: Experiment a -> IO (LGraph D B.ByteString ())
 buildNet e = do
     let [fl] = filter (\x -> x^.keywords == ["gene-TF assignment"]) $ e^.files
     result <- decodeFile $ fl^.location :: IO [(B.ByteString, [(B.ByteString, [BED])])]
     return $ fromLabeledEdges $ flip concatMap result $ \(a, b) ->
         zip (zip (repeat a) $ fst $ unzip b) $ repeat ()
 
+printEdgeList :: FilePath -> Experiment a -> IO ()
+printEdgeList dir e = do
+    let [fl] = filter (\x -> x^.keywords == ["gene-TF assignment"]) $ e^.files
+    result <- decodeFile $ fl^.location :: IO [(B.ByteString, [(B.ByteString, [BED])])]
+    let output = dir ++ "/" ++ T.unpack (e^.celltype) ++ "_" ++
+            T.unpack (e^.target) ++ ".tsv"
+    B.writeFile output $ B.unlines $ flip map result $ \(a,b) ->
+        B.intercalate "\t" [a, B.intercalate "," $ fst $ unzip b]
+
+
 writeTSV :: FilePath -> ([T.Text], [B.ByteString], [[Double]]) -> IO ()
 writeTSV output (colNames, rowNames, dat) = B.writeFile output $ B.unlines $
     B.intercalate "\t" ("Gene" : map (B.pack . T.unpack) colNames) :
     map (\(a,b) -> B.intercalate "\t" $ a : map toShortest b)
         (zip rowNames $ transpose dat)
-
-
-graph :: Builder ()
-graph = do
-    node "net00" 'pageRank $ return ()
-    node "net01" [| writeTSV "ranks.tsv" |] $ submitToRemote .= Just False
-    path ["ex10", "net00", "net01"]

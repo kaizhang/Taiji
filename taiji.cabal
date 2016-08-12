@@ -16,7 +16,7 @@ cabal-version:       >=1.10
 executable taiji
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded
+  ghc-options:         -threaded -Wall
   build-depends:
       base
     , aeson
@@ -38,12 +38,15 @@ executable taiji
     , mtl
     , turtle
     , text
-    , SciFlow
+    , SciFlow >=0.5.3
+    , yaml
 
   default-language:    Haskell2010
   other-modules:
-    Pipeline
+    Assign
+    Builder
     Network
+    Config
 
 source-repository head
   type:     git

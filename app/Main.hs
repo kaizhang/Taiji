@@ -6,7 +6,6 @@ module Main where
 import Scientific.Workflow.Main
 import Bio.Pipeline.Instances ()
 
-import Pipeline
-import qualified Network
+import Builder (graph)
 
-defaultMain $ pipeline >> Network.graph
+defaultMain graph
