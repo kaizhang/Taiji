@@ -2,40 +2,55 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Builder (graph) where
 
-import           Bio.Data.Bed
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
-import           Bio.GO.GREAT
 import           Bio.Pipeline.CallPeaks
 import           Bio.Pipeline.Instances
 import           Bio.Pipeline.NGS
 import           Bio.Pipeline.ScanMotifs
-import           Bio.Utils.Misc            (readInt)
 import           Control.Arrow             (first, second, (&&&), (***))
 import           Control.Lens
-import           Data.Binary               (decodeFile, encodeFile)
 import qualified Data.ByteString.Char8     as B
-import           Data.Dynamic
 import           Data.Function             (on)
 import           Data.List
 import           Data.Maybe
+import Data.Aeson.Types (Result(..), fromJSON)
+import Data.Yaml (Object, decodeFile)
 import           Data.Ord
 import qualified Data.Text                 as T
-import           Scientific.Workflow
+import           Scientific.Workflow hiding (Success)
 import qualified Data.HashMap.Strict as M
 
 import Config
 import Assign
 import Network
 
-readData :: () -> IO [Experiment ATAC_Seq]
-readData _ = fmap fromJust $ readExp $ config!"input"
+readData :: () -> IO ( [Experiment ATAC_Seq]
+                     , [Experiment ChIP_Seq]
+                     , [Experiment RNA_Seq] )
+readData _ = do
+    Just dat <- decodeFile $ config!"input" :: IO (Maybe Object)
+    return ( parse $ M.lookup "atac-seq" dat
+           , parse $ M.lookup "chip-seq" dat
+           , parse $ M.lookup "rna-seq" dat
+           )
+  where
+    parse x = case x of
+        Nothing -> []
+        Just x' -> case fromJSON x' of
+            Error msg -> error msg
+            Success r -> r
 
 graph :: Builder ()
 graph = do
     node "init00" 'readData $ do
         submitToRemote .= Just False
         label .= "Parse metadata"
+
+    node "atac00" [| \x -> return $ x^._1 |] $ do
+        submitToRemote .= Just False
+        label .= "Get ATAC-seq data"
+    path ["init00", "atac00"]
 
     node "align00" [| bwaAlign (config!"outputDir") (config!"genome") (return ()) |] $
         batch .= 1
@@ -44,7 +59,7 @@ graph = do
         batch .= 1
     node "align03" [| bamToBed (config!"outputDir") |] $
         batch .= 1
-    path ["init00", "align00", "align01", "align02", "align03"]
+    path ["atac00", "align00", "align01", "align02", "align03"]
 
     node "peak00" [| mapM $ \x -> return (x, Nothing) |] $
         batch .= 1
