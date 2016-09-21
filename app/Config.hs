@@ -12,6 +12,7 @@ defaultConfig = M.fromList
     , ("genome", "/home/kai/Mus_musculus/UCSC/mm10/Sequence/BWAIndex/genome.fa")
     , ("genomeIndex", "/home/kai/data/genome/mm10.index")
     , ("gencode", "/home/kai/project/TRM/data/gencode.vM9.annotation.gff3")
+    , ("STARIndex", "/home/kai/Mus_musculus/UCSC/mm10/Sequence/STARIndex/")
     ]
 
 config :: M.Map String String

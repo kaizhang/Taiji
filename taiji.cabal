@@ -33,20 +33,23 @@ executable taiji
     , data-default
     , hashable
     , haskell-igraph
-    , unordered-containers
     , lens
     , mtl
+    , SciFlow >=0.5.3
+    , statistics
     , turtle
     , text
-    , SciFlow >=0.5.3
+    , unordered-containers
+    , vector
     , yaml
 
   default-language:    Haskell2010
   other-modules:
     Assign
     Builder
+    Expression
     Network
-    Config
+    Visualize
 
 source-repository head
   type:     git

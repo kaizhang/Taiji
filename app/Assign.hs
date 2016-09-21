@@ -1,6 +1,6 @@
 -- Assign TFs to their targets
+{-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE OverloadedLists #-}
 module Assign
     ( getDomains
     , linkGeneToTFs
@@ -8,12 +8,8 @@ module Assign
 
 import           Bio.Data.Bed
 import           Bio.Data.Experiment.Types
-import           Bio.Data.Experiment.Utils
 import           Bio.GO.GREAT
-import           Bio.Pipeline.CallPeaks
-import           Bio.Pipeline.Instances
-import           Bio.Pipeline.NGS
-import           Bio.Pipeline.ScanMotifs
+import           Bio.Pipeline.Instances    ()
 import           Bio.Utils.Misc            (readInt)
 import           Control.Arrow             (first, second, (&&&), (***))
 import           Control.Lens
@@ -26,13 +22,13 @@ import           Data.Maybe
 import           Data.Ord
 import qualified Data.Text                 as T
 
-import Config
-
 -- | Gene and its regulators
 type Linkage = (B.ByteString, [(B.ByteString, [BED])])
 
-getDomains :: FilePath -> [Experiment ATAC_Seq] -> IO [Experiment ATAC_Seq]
-getDomains dir = mapM $ \e -> do
+getDomains :: FilePath   -- output
+           -> FilePath   -- annotation
+           -> [Experiment ATAC_Seq] -> IO [Experiment ATAC_Seq]
+getDomains dir anno = mapM $ \e -> do
     let [fl] = filter ((==NarrowPeakFile) . (^.format)) $ e^.files
         output = dir ++ "/" ++ T.unpack (e^.eid) ++ "_gene_reg_domains.bed"
         newFile = format .~ BedFile $
@@ -40,7 +36,7 @@ getDomains dir = mapM $ \e -> do
                   keywords .~ ["gene regulatory domain"] $
                   location .~ output $ fl
     peaks <- readBed' $ fl^.location
-    activePromoters <- gencodeActiveGenes (config!"gencode") peaks
+    activePromoters <- gencodeActiveGenes anno peaks
     writeBed' output $ getGeneDomains GREAT activePromoters
     return $ files %~ (newFile:) $ e
 

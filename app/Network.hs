@@ -1,6 +1,6 @@
 -- This module contains network-related analysis
-{-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Network where
 
@@ -11,22 +11,24 @@ import           Bio.Pipeline.CallPeaks
 import           Bio.Pipeline.Instances
 import           Bio.Pipeline.NGS
 import           Bio.Pipeline.ScanMotifs
-import Control.Monad
 import           Control.Lens
-import           Data.Binary               (decodeFile, encodeFile)
-import qualified Data.ByteString.Char8     as B
-import           Data.Function             (on)
+import           Control.Monad
+import           Data.Binary                       (decodeFile, encodeFile)
+import qualified Data.ByteString.Char8             as B
+import           Data.Double.Conversion.ByteString (toShortest)
+import           Data.Function                     (on)
+import qualified Data.HashMap.Strict               as M
 import           Data.List
-import qualified Data.HashMap.Strict                  as M
+import           Data.List.Ordered                 (nubSort)
 import           Data.Maybe
 import           Data.Ord
-import Data.List.Ordered (nubSort)
-import qualified Data.Text                 as T
+import qualified Data.Text                         as T
 import           IGraph
-import           IGraph.Structure
-import Data.Double.Conversion.ByteString (toShortest)
-
+import           IGraph.Structure                  (pagerank,
+                                                    personalizedPagerank)
 import           Scientific.Workflow
+
+import           Expression
 
 pageRank :: [Experiment a] -> IO ([T.Text], [B.ByteString], [[Double]])
 pageRank es = do
@@ -39,7 +41,25 @@ pageRank es = do
         ranks = flip map results $ \xs ->
             let geneRanks = M.fromList xs
             in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
-    return (expNames, genes, ranks)
+    return (expNames, genes, transpose ranks)
+
+personalizedPageRank :: (FilePath, [Experiment a])
+                     -> IO ([T.Text], [B.ByteString], [[Double]])
+personalizedPageRank (rnaseq, es) = do
+    rnaseqData <- readExpression rnaseq
+
+    results <- forM es $ \e -> do
+        gr <- buildNet e
+        let labs = map (nodeLab gr) $ nodes gr
+            geneExpression = fromJust $ lookup (B.pack $ T.unpack $ e^.celltype) rnaseqData
+            weights = map (\x -> exp (M.lookupDefault (-10) x geneExpression)) labs
+        return $ zip labs $ personalizedPagerank gr weights Nothing 0.85
+    let genes = nubSort $ concatMap (fst . unzip) results
+        expNames = map (^.eid) es
+        ranks = flip map results $ \xs ->
+            let geneRanks = M.fromList xs
+            in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
+    return (expNames, genes, transpose ranks)
 
 buildNet :: Experiment a -> IO (LGraph D B.ByteString ())
 buildNet e = do
@@ -57,9 +77,8 @@ printEdgeList dir e = do
     B.writeFile output $ B.unlines $ flip map result $ \(a,b) ->
         B.intercalate "\t" [a, B.intercalate "," $ fst $ unzip b]
 
-
 writeTSV :: FilePath -> ([T.Text], [B.ByteString], [[Double]]) -> IO ()
 writeTSV output (colNames, rowNames, dat) = B.writeFile output $ B.unlines $
     B.intercalate "\t" ("Gene" : map (B.pack . T.unpack) colNames) :
     map (\(a,b) -> B.intercalate "\t" $ a : map toShortest b)
-        (zip rowNames $ transpose dat)
+        (zip rowNames dat)

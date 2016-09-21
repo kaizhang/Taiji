@@ -1,5 +1,5 @@
-{-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Builder (graph) where
 
 import           Bio.Data.Experiment.Types
@@ -8,28 +8,57 @@ import           Bio.Pipeline.CallPeaks
 import           Bio.Pipeline.Instances
 import           Bio.Pipeline.NGS
 import           Bio.Pipeline.ScanMotifs
+import Bio.Seq.IO (mkIndex)
 import           Control.Arrow             (first, second, (&&&), (***))
+import Control.Monad.IO.Class (liftIO)
 import           Control.Lens
+import           Data.Aeson.Types          (Result (..), fromJSON)
 import qualified Data.ByteString.Char8     as B
-import           Data.Function             (on)
-import           Data.List
+import qualified Data.HashMap.Strict       as M
 import           Data.Maybe
-import Data.Aeson.Types (Result(..), fromJSON)
-import Data.Yaml (Object, decodeFile)
 import           Data.Ord
 import qualified Data.Text                 as T
-import           Scientific.Workflow hiding (Success)
-import qualified Data.HashMap.Strict as M
+import           Data.Yaml                 (Object, decodeFile)
+import           Scientific.Workflow       hiding (Success)
+import Turtle (testfile, fromText)
+import System.IO (stderr, hPutStrLn)
 
-import Config
-import Assign
-import Network
+import           Assign
+import           Network
+import           Visualize
 
-readData :: () -> IO ( [Experiment ATAC_Seq]
-                     , [Experiment ChIP_Seq]
-                     , [Experiment RNA_Seq] )
-readData _ = do
-    Just dat <- decodeFile $ config!"input" :: IO (Maybe Object)
+mkIndices :: ProcState ()
+mkIndices = do
+    fastq <- getConfig' "genome"
+
+    -- generate sequence index
+    seqIndex <- getConfig "seqIndex"
+    fileExist <- liftIO $ testfile (fromText seqIndex)
+    liftIO $ if fileExist
+        then hPutStrLn stderr "Sequence index exists. Skipped."
+        else do
+            hPutStrLn stderr "Generating sequence index"
+            mkIndex [fastq] $ T.unpack seqIndex
+
+    -- generate BWA index
+    bwaIndex <- getConfig' "bwaIndex"
+    liftIO $ bwaMkIndex fastq bwaIndex
+
+    -- generate STAR index
+    starIndex <- getConfigMaybe' "starIndex"
+    case starIndex of
+        Nothing -> return ()
+        Just dir -> do
+            anno <- getConfig' "annotation"
+            liftIO $ starMkIndex "STAR" dir [fastq] anno 100
+            return ()
+
+readData ::  ProcState ( [Experiment ATAC_Seq]
+                       , [Experiment ChIP_Seq]
+                       , [Experiment RNA_Seq] )
+readData = do
+    inputFl <- getConfig' "input"
+    Just dat <- liftIO (decodeFile inputFl  :: IO (Maybe Object))
     return ( parse $ M.lookup "atac-seq" dat
            , parse $ M.lookup "chip-seq" dat
            , parse $ M.lookup "rna-seq" dat
@@ -43,45 +72,83 @@ readData _ = do
 
 graph :: Builder ()
 graph = do
-    node "init00" 'readData $ do
+    node "init00" [| \() -> mkIndices >> readData |] $ do
         submitToRemote .= Just False
         label .= "Parse metadata"
+        stateful .= True
 
-    node "atac00" [| \x -> return $ x^._1 |] $ do
+    {-
+    node "atac00" [| return . (^._1) |] $ do
         submitToRemote .= Just False
         label .= "Get ATAC-seq data"
     path ["init00", "atac00"]
 
-    node "align00" [| bwaAlign (config!"outputDir") (config!"genome") (return ()) |] $
-        batch .= 1
-    node "align01" [| filterBam (config!"outputDir") |] $ batch .= 1
-    node "align02" [| removeDuplicates "/home/kai/software/picard-tools-1.140/picard.jar" (config!"outputDir") |] $
-        batch .= 1
-    node "align03" [| bamToBed (config!"outputDir") |] $
-        batch .= 1
+    node "align00" [| \x -> bwaAlign <$> (getConfig' "outputDir") <*>
+        (getConfig' "genome") <*> return (return ()) <*> return x >>= liftIO
+        |] $ batch .= 1 >> stateful .= True
+    node "align01" [| \x -> filterBam <$> (getConfig' "outputDir") <*> return x
+        >>= liftIO
+        |] $ batch .= 1 >> stateful .= True
+    node "align02" [| \x -> removeDuplicates <$>
+        (return "/home/kai/software/picard-tools-1.140/picard.jar") <*>
+        (getConfig' "outputDir") <*> return x >>= liftIO
+        |] $ batch .= 1 >> stateful .= True
+    node "align03" [| \x -> bamToBed <$> (getConfig' "outputDir") <*> return x >>= liftIO
+        |] $ batch .= 1 >> stateful .= True
     path ["atac00", "align00", "align01", "align02", "align03"]
 
     node "peak00" [| mapM $ \x -> return (x, Nothing) |] $
         batch .= 1
-    node "peak01" [| callPeaks (config!"outputDir") (return ()) |] $
-        batch .= 1
+    node "peak01" [| \x -> callPeaks <$> (getConfig' "outputDir") <*>
+        return (return ()) <*> return x >>= liftIO
+        |] $ batch .= 1 >> stateful .= True
     node "peak02" [| \exps -> do
         let f x = map (^.location) $ filter ((==NarrowPeakFile) . (^.format)) $ x^.files
-        scanMotifs (config!"genomeIndex") (config!"motifFile") 1e-5
-            ((config!"outputDir") ++ "/TFBS.bed") (concatMap f (exps :: [Experiment ATAC_Seq]))
-        |] $ return ()
+        scanMotifs <$> (getConfig' "genomeIndex") <*> (getConfig' "motifFile") <*>
+            return 1e-5 <*> ((++ "/TFBS.bed") <$> getConfig' "outputDir" ) <*>
+            return (concatMap f (exps :: [Experiment ATAC_Seq])) >>= liftIO
+        |] $ stateful .= True
     path ["align03", "peak00", "peak01", "peak02"]
 
-    node "ass00" [| getDomains (config!"outputDir") |] $ batch .= 1
+    node "ass00" [| \x -> getDomains <$> (getConfig' "outputDir") <*>
+        getConfig' "annotation" <*> return x >>= liftIO
+        |] $ batch .= 1 >> stateful .= True
     ["peak01"] ~> "ass00"
     node "ass01" [| \(x,y) -> return $ zip x $ repeat y |] $ do
         label .= "prepare input"
         submitToRemote .= Just False
     ["ass00", "peak02"] ~> "ass01"
-    node "ass02" [| mapM (linkGeneToTFs $ config!"outputDir") |] $ batch .= 1
-    node "ass03" [| mapM (printEdgeList $ config!"outputDir") |] $ batch .= 1
+    node "ass02" [| \xs -> do
+        dir <- getConfig' "outputDir"
+        liftIO $ mapM (linkGeneToTFs dir) xs
+        |] $ batch .= 1 >> stateful .= True
+    node "ass03" [| \xs -> do
+        dir <- getConfig' "outputDir"
+        liftIO $ mapM (printEdgeList dir) xs
+        |] $ batch .= 1 >> stateful .= True
     path ["ass01", "ass02", "ass03"]
+    -}
 
-    node "net00" 'pageRank $ return ()
+    node "rna00" [| return . (^._3) |] $ do
+        submitToRemote .= Just False
+        label .= "Get RNA-seq data"
+    node "rna01" [| \x -> do
+        dir <- getConfig' "outputDir"
+        starAlign <$> return (dir++"/RNA_Seq") <*> getConfig' "starIndex" <*>
+            return (return ()) <*> return x >>= liftIO
+        |] $ stateful .= True
+    path ["init00", "rna00", "rna01"]
+
+{-
+    node "net00" [| \x -> do
+        expression <- getConfigMaybe' "expression_profile"
+        liftIO $ case expression of
+            Nothing -> pageRank x
+            Just e -> personalizedPageRank (e, x)
+        |] $ stateful .= True
     node "net01" [| writeTSV "ranks.tsv" |] $ submitToRemote .= Just False
     path ["ass02", "net00", "net01"]
+
+    node "vis00" [| \x -> outputData "r.tsv" x (getMetrics x) |] $ submitToRemote .= Just False
+    ["net00"] ~> "vis00"
+    -}
