@@ -2,7 +2,6 @@ resolver: lts-7.0
 
 packages:
     - '.'
-    - '../bio-pipelines'
 
     - location:
         git: https://github.com/kaizhang/SciFlow.git
@@ -16,17 +15,19 @@ packages:
         git: https://github.com/kaizhang/haskell-igraph.git
         commit: 4622414876481fdb45db9db185745fa8a5ba50fa
 
-#    - location:
-#        git: https://github.com/kaizhang/bio-pipelines.git
-#        commit: 503cdbda6450fc4c6dac467073314c3a541eebc0
+    - location:
+        git: https://github.com/kaizhang/bio-pipelines.git
+        commit: 3242aa63d40152218fb48f9f3dea659eb33d14e7
 
 extra-deps:
     - samtools-0.2.4.3
-    - drmaa-0.1.0.1
     - bioinformatics-toolkit-0.2.2
     - hexpat-0.20.9
     - List-0.5.2
 
-flags:
-    SciFlow:
-        sge: true
+# Uncomment following lines if you want to use SGE
+#    - drmaa-0.1.0.1
+
+#flags:
+#    SciFlow:
+#        sge: true

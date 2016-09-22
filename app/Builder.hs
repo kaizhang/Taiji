@@ -70,6 +70,16 @@ readData = do
             Error msg -> error msg
             Success r -> r
 
+atacSeqDir :: ProcState FilePath
+atacSeqDir = do
+    dir <- getConfig' "outputDir"
+    return $ dir ++ "/ATAC_Seq/"
+
+networkDir :: ProcState FilePath
+networkDir = do
+    dir <- getConfig' "outputDir"
+    return $ dir ++ "/Network/"
+
 graph :: Builder ()
 graph = do
     node "init00" [| \() -> mkIndices >> readData |] $ do
@@ -77,40 +87,38 @@ graph = do
         label .= "Parse metadata"
         stateful .= True
 
-    {-
     node "atac00" [| return . (^._1) |] $ do
         submitToRemote .= Just False
         label .= "Get ATAC-seq data"
     path ["init00", "atac00"]
 
-    node "align00" [| \x -> bwaAlign <$> (getConfig' "outputDir") <*>
+    node "align00" [| \x -> bwaAlign <$> atacSeqDir <*>
         (getConfig' "genome") <*> return (return ()) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "align01" [| \x -> filterBam <$> (getConfig' "outputDir") <*> return x
+    node "align01" [| \x -> filterBam <$> atacSeqDir <*> return x
         >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     node "align02" [| \x -> removeDuplicates <$>
-        (return "/home/kai/software/picard-tools-1.140/picard.jar") <*>
-        (getConfig' "outputDir") <*> return x >>= liftIO
+        getConfig' "picard" <*> atacSeqDir  <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "align03" [| \x -> bamToBed <$> (getConfig' "outputDir") <*> return x >>= liftIO
+    node "align03" [| \x -> bamToBed <$> atacSeqDir <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     path ["atac00", "align00", "align01", "align02", "align03"]
 
     node "peak00" [| mapM $ \x -> return (x, Nothing) |] $
         batch .= 1
-    node "peak01" [| \x -> callPeaks <$> (getConfig' "outputDir") <*>
+    node "peak01" [| \x -> callPeaks <$> atacSeqDir <*>
         return (return ()) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     node "peak02" [| \exps -> do
         let f x = map (^.location) $ filter ((==NarrowPeakFile) . (^.format)) $ x^.files
         scanMotifs <$> (getConfig' "genomeIndex") <*> (getConfig' "motifFile") <*>
-            return 1e-5 <*> ((++ "/TFBS.bed") <$> getConfig' "outputDir" ) <*>
+            return 1e-5 <*> ((++ "/TFBS.bed") <$> atacSeqDir ) <*>
             return (concatMap f (exps :: [Experiment ATAC_Seq])) >>= liftIO
         |] $ stateful .= True
     path ["align03", "peak00", "peak01", "peak02"]
 
-    node "ass00" [| \x -> getDomains <$> (getConfig' "outputDir") <*>
+    node "ass00" [| \x -> getDomains <$> networkDir <*>
         getConfig' "annotation" <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     ["peak01"] ~> "ass00"
@@ -119,15 +127,14 @@ graph = do
         submitToRemote .= Just False
     ["ass00", "peak02"] ~> "ass01"
     node "ass02" [| \xs -> do
-        dir <- getConfig' "outputDir"
+        dir <- networkDir
         liftIO $ mapM (linkGeneToTFs dir) xs
         |] $ batch .= 1 >> stateful .= True
     node "ass03" [| \xs -> do
-        dir <- getConfig' "outputDir"
+        dir <- networkDir
         liftIO $ mapM (printEdgeList dir) xs
         |] $ batch .= 1 >> stateful .= True
     path ["ass01", "ass02", "ass03"]
-    -}
 
     node "rna00" [| return . (^._3) |] $ do
         submitToRemote .= Just False
@@ -139,16 +146,13 @@ graph = do
         |] $ stateful .= True
     path ["init00", "rna00", "rna01"]
 
-{-
     node "net00" [| \x -> do
         expression <- getConfigMaybe' "expression_profile"
         liftIO $ case expression of
             Nothing -> pageRank x
             Just e -> personalizedPageRank (e, x)
         |] $ stateful .= True
-    node "net01" [| writeTSV "ranks.tsv" |] $ submitToRemote .= Just False
-    path ["ass02", "net00", "net01"]
+    path ["ass02", "net00"]
 
     node "vis00" [| \x -> outputData "r.tsv" x (getMetrics x) |] $ submitToRemote .= Just False
     ["net00"] ~> "vis00"
-    -}

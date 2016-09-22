@@ -10,7 +10,7 @@ maintainer:          kai@kzhang.org
 copyright:           2016 Kai Zhang
 category:            Bio
 build-type:          Simple
--- extra-source-files:
+extra-source-files:  stack.yaml
 cabal-version:       >=1.10
 
 executable taiji

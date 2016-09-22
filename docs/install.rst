@@ -3,11 +3,13 @@ Dependency installation
 
 Mandatory:
 
-- samtools-v1.1
-- BWA-v0.7.12
+- `samtools-v1.3.1 <https://github.com/samtools/samtools/releases>`_
 - bedtools-v2.22.1
+- BWA-v0.7.12
 - igraph-v0.7.1
-- `MACS2-v2.1.1.20160309 <https://pypi.python.org/pypi/MACS2/2.1.1.20160309>`__
+- `MACS2-v2.1.1.20160309 <https://pypi.python.org/pypi/MACS2/2.1.1.20160309>`_
+- `Picard <https://github.com/broadinstitute/picard/releases/tag/2.6.0>`_
+- java-v1.8
 
 Optional:
 
