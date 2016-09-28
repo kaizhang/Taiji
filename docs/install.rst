@@ -13,7 +13,8 @@ Mandatory:
 
 Optional:
 
-* STAR-v2.5.2b
+- STAR-v2.5.2b
+- `RSEM-1.2.31 <https://github.com/deweylab/RSEM/releases>`_
 
 .. note::
     Software with older versions might not work.
@@ -39,21 +40,21 @@ that is in your system path, e.g., ``/usr/bin``.
     mv stack-x.x.x-linux-x64/stack /usr/bin
 
 
-Download DBPnet source and install GHC
+Download Taiji source and install GHC
 --------------------------------------
 
-Download the `latest source code <https://github.com/kaizhang/DBPnet/releases>`_ and
+Download the `latest source code <https://github.com/kaizhang/Taiji/releases>`_ and
 unpack it.
 
 ::
 
-    tar zxf DBPnet-X.X.X.tar.gz
+    tar zxf Taiji-X.X.X.tar.gz
 
 Go into the source code directory and install GHC.
 
 ::
 
-    cd DBPnet-X.X.X
+    cd Taiji-X.X.X
     stack setup
 
 Once you have a working copy of GHC, you can proceed to install the
@@ -63,7 +64,7 @@ dependencies of DBPnet. Under the source code directory, type:
 
     stack build --only-dependencies
 
-and then install DBPnet:
+and then install Taiji:
 
 ::
 

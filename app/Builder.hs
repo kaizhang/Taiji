@@ -5,7 +5,7 @@ module Builder (graph) where
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.CallPeaks
-import           Bio.Pipeline.Instances
+import           Bio.Pipeline.Instances ()
 import           Bio.Pipeline.NGS
 import           Bio.Pipeline.ScanMotifs
 import Bio.Seq.IO (mkIndex)
@@ -53,6 +53,16 @@ mkIndices = do
             liftIO $ starMkIndex "STAR" dir [fastq] anno 100
             return ()
 
+    -- generate RSEM index
+    rsemIndex <- getConfigMaybe' "rsemIndex"
+    case rsemIndex of
+        Nothing -> return ()
+        Just prefix -> do
+            anno <- getConfig' "annotation"
+            liftIO $ rsemMkIndex prefix anno [fastq]
+            return ()
+
+
 readData ::  ProcState ( [Experiment ATAC_Seq]
                        , [Experiment ChIP_Seq]
                        , [Experiment RNA_Seq] )
@@ -83,10 +93,10 @@ networkDir = do
 graph :: Builder ()
 graph = do
     node "init00" [| \() -> mkIndices >> readData |] $ do
-        submitToRemote .= Just False
         label .= "Parse metadata"
         stateful .= True
 
+{-
     node "atac00" [| return . (^._1) |] $ do
         submitToRemote .= Just False
         label .= "Get ATAC-seq data"
@@ -113,7 +123,7 @@ graph = do
     node "peak02" [| \exps -> do
         let f x = map (^.location) $ filter ((==NarrowPeakFile) . (^.format)) $ x^.files
         scanMotifs <$> (getConfig' "genomeIndex") <*> (getConfig' "motifFile") <*>
-            return 1e-5 <*> ((++ "/TFBS.bed") <$> atacSeqDir ) <*>
+            return 1e-5 <*> ((++ "/TFBS_open_chromatin_union.bed") <$> atacSeqDir ) <*>
             return (concatMap f (exps :: [Experiment ATAC_Seq])) >>= liftIO
         |] $ stateful .= True
     path ["align03", "peak00", "peak01", "peak02"]
@@ -135,17 +145,24 @@ graph = do
         liftIO $ mapM (printEdgeList dir) xs
         |] $ batch .= 1 >> stateful .= True
     path ["ass01", "ass02", "ass03"]
+    -}
 
     node "rna00" [| return . (^._3) |] $ do
         submitToRemote .= Just False
         label .= "Get RNA-seq data"
     node "rna01" [| \x -> do
         dir <- getConfig' "outputDir"
-        starAlign <$> return (dir++"/RNA_Seq") <*> getConfig' "starIndex" <*>
+        starAlign <$> return (dir++"/RNA_Seq/") <*> getConfig' "starIndex" <*>
             return (return ()) <*> return x >>= liftIO
         |] $ stateful .= True
-    path ["init00", "rna00", "rna01"]
+    node "rna02" [| \x -> do
+        dir <- getConfig' "outputDir"
+        rsemQuant <$> return (dir++"/RNA_Seq/") <*> getConfig' "rsemIndex" <*>
+            return (return ()) <*> return x >>= liftIO
+        |] $ stateful .= True
+    path ["init00", "rna00", "rna01", "rna02"]
 
+{-
     node "net00" [| \x -> do
         expression <- getConfigMaybe' "expression_profile"
         liftIO $ case expression of
@@ -156,3 +173,4 @@ graph = do
 
     node "vis00" [| \x -> outputData "r.tsv" x (getMetrics x) |] $ submitToRemote .= Just False
     ["net00"] ~> "vis00"
+    -}

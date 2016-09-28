@@ -1,4 +1,3 @@
-To use the Taiji, you need 2 configuration file.
+To use the Taiji, you need a configuration file. For details, read the example configuration file "config.yml" that is included in the software.
 
-1. taiji.yml: this file should locate in the directory where you run Taiji.
-2. input data file.
+To use the Taiji: taiji run --config config.yml

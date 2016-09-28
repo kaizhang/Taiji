@@ -73,7 +73,7 @@ printEdgeList dir e = do
     let [fl] = filter (\x -> x^.keywords == ["gene-TF assignment"]) $ e^.files
     result <- decodeFile $ fl^.location :: IO [(B.ByteString, [(B.ByteString, [BED])])]
     let output = dir ++ "/" ++ T.unpack (e^.celltype) ++ "_" ++
-            T.unpack (e^.target) ++ ".tsv"
+            T.unpack (e^.target) ++ "_associations.tsv"
     B.writeFile output $ B.unlines $ flip map result $ \(a,b) ->
         B.intercalate "\t" [a, B.intercalate "," $ fst $ unzip b]
 

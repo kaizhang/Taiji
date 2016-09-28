@@ -83,7 +83,7 @@ getGeneDomains GREAT = map ( \(b, x) ->
     getRegulatoryDomains (BasalPlusExtension 5000 1000 1000000)
 
 -- | Identify active genes by overlapping their promoters with activity indicators.
-gencodeActiveGenes :: FilePath   -- ^ gencode file
+gencodeActiveGenes :: FilePath   -- ^ gencode file in GTF format
                    -> [BED3]     -- ^ feature that is used to determine the activity
                                  -- of promoters, e.g., H3K4me3 peaks or ATAC-seq peaks
                    -> IO [((B.ByteString, Int, Bool), B.ByteString)]  -- ^ chr, tss, strand and gene name.
@@ -100,8 +100,8 @@ gencodeActiveGenes input peaks = do
         fromJust $ bedStrand x), fromJust $ bedName x )) $ fst $ unzip $
         filter (not . null . snd) $ intersectBedWith id promoters peaks
   where
-    f xs = let name = last $ B.split '=' $ head $
-                      filter (B.isPrefixOf "gene_name") $ B.split ';' $ last xs
+    f xs = let name = B.filter (/='\"') $ last $ B.split ' ' $ head $
+                      filter (B.isInfixOf "gene_name") $ B.split ';' $ last xs
                start = readInt $ xs !! 3
                end = readInt $ xs !! 4
                strand = if xs !! 6 == "+" then True else False
