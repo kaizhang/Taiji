@@ -14,13 +14,16 @@ import qualified Data.Vector.Unboxed   as U
 
 -- | Read RNA expression data
 readExpression :: FilePath
-               -> IO [(B.ByteString, M.HashMap B.ByteString Double)]  -- ^ cell type and data
+               -> IO [( B.ByteString    -- ^ cell type
+                     , M.HashMap B.ByteString (Double, Double)  -- ^ absolute value and z-score
+                     )]
 readExpression fl = do
     c <- B.readFile fl
     let ((_:header):dat) = map (B.split '\t') $ B.lines c
         rowNames = map head dat
+        dataTable = filtering $ map (map readDouble . tail) dat
     return $ zipWith (\a b -> (a, M.fromList $ zip rowNames b)) header $
-        transpose $ computeZscore $ filtering $ map (map readDouble . tail) dat
+        transpose $ zipWith zip dataTable $ computeZscore dataTable
   where
     filtering = filter (\x -> not $ all (<1) x || all (==head x) x)
     computeZscore = map (U.toList . scale . U.fromList)
