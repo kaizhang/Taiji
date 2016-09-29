@@ -5,7 +5,6 @@
 module Network where
 
 import           Bio.Data.Bed
-import Bio.Utils.Functions (ihs')
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.CallPeaks
@@ -54,10 +53,10 @@ personalizedPageRank (rnaseq, es) = do
         let lookupExpr x = M.lookupDefault (0.01,-10) x $ fromJust $ lookup
                 (B.pack $ T.unpack $ e^.celltype) rnaseqData
             nodeWeights = map (exp . snd . lookupExpr) labs
-            edgeWeights = map (fst . lookupExpr . nodeLab gr . snd) $ edges gr
+            edgeWeights = map (sqrt . fst . lookupExpr . nodeLab gr . snd) $ edges gr
             labs = map (nodeLab gr) $ nodes gr
         return $ zip labs $
-            personalizedPagerank gr nodeWeights (Just edgeWeights) 0.5
+            personalizedPagerank gr nodeWeights (Just edgeWeights) 0.85
     let genes = nubSort $ concatMap (fst . unzip) results
         expNames = map (^.eid) es
         ranks = flip map results $ \xs ->

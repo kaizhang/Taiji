@@ -1,0 +1,54 @@
+# The path to a file specifying the input data sets. The software come with
+# an example file named "input.yaml".
+input: "data/input.yaml"
+
+# Directory containing the results.
+outputDir: "output/"
+
+# The path to the picard tools.
+picard: "/home/kai/software/picard-tools-1.140/picard.jar"
+
+################################################################################
+# Genome Indices
+################################################################################
+
+# Complete genome in a single plain FASTA file. Genomes can be downloaded from http://hgdownload.cse.ucsc.edu/downloads.html.
+# For example, this link gives you the complete human genome:
+# http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
+# Important: Remember to ungzip the file using "gzip -d hg38.fa.gz"!
+genome: "/home/kai/genome/GRCh38/Sequence/BWAIndex/genome.fa"
+
+# Genome annotation in *GTF* format. For human and mouse, Gencode annotations are
+# available at http://www.gencodegenes.org/
+annotation: "/home/kai/genome/GRCh38/Annotation/gencode.v25.annotation.gtf"
+
+# MEME format file containing motifs
+motifFile: "/home/kai/motif_databases/cisBP_human.meme"
+
+# Optional expression profile
+# expression_profile:
+
+################################################################################
+# You don't have to physically provide the following files. But you do need to
+# specify the locations where these files will be generated automatically if
+# they are absent. Note the program DO NOT overwrite existing files/directories
+# so that you can provide your own indices without having the program generate
+# them. If you want to re-generate indices, make sure delete correponding
+# files/directories first.
+################################################################################
+
+# Genome sequence index
+seqIndex: "/home/kai/genome/GRCh38/Sequence/GRCh38.index"
+
+# BWA Index
+bwaIndex: "/home/kai/genome/GRCh38/Sequence/BWAIndex/genome.fa"
+
+# Uncomment following sections if you want to analyze raw RNA-seq fastq files.
+# Note: STAR aligner uses a lot memory.
+# For example, you need at least 30G memory for human genome.
+
+# Directory containing the STAR indices.
+starIndex: "/home/kai/genome/GRCh38/Sequence/STAR_index/"
+
+# RSEM index prefix
+rsemIndex: "/home/kai/genome/GRCh38/Sequence/RSEM_index/GRCh38"

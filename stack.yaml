@@ -4,10 +4,11 @@ packages:
     - '.'
     - '../bio-pipelines'
     - '../bioinformatics-toolkit'
+    - '../SciFlow'
 
-    - location:
-        git: https://github.com/kaizhang/SciFlow.git
-        commit: e6fec402b8746ee02b9b7f057a4d8e8e7ef530cf
+    #- location:
+    #    git: https://github.com/kaizhang/SciFlow.git
+    #    commit: e6fec402b8746ee02b9b7f057a4d8e8e7ef530cf
 
     - location:
         git: https://github.com/kaizhang/bio-experiments.git

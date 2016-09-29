@@ -5,13 +5,13 @@ module Builder (graph) where
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.CallPeaks
-import           Bio.Pipeline.Instances ()
+import           Bio.Pipeline.Instances    ()
 import           Bio.Pipeline.NGS
 import           Bio.Pipeline.ScanMotifs
-import Bio.Seq.IO (mkIndex)
+import           Bio.Seq.IO                (mkIndex)
 import           Control.Arrow             (first, second, (&&&), (***))
-import Control.Monad.IO.Class (liftIO)
 import           Control.Lens
+import           Control.Monad.IO.Class    (liftIO)
 import           Data.Aeson.Types          (Result (..), fromJSON)
 import qualified Data.ByteString.Char8     as B
 import qualified Data.HashMap.Strict       as M
@@ -20,8 +20,8 @@ import           Data.Ord
 import qualified Data.Text                 as T
 import           Data.Yaml                 (Object, decodeFile)
 import           Scientific.Workflow       hiding (Success)
-import Turtle (testfile, fromText)
-import System.IO (stderr, hPutStrLn)
+import           System.IO                 (hPutStrLn, stderr)
+import           Turtle                    (fromText, mktree, testfile)
 
 import           Assign
 import           Network
@@ -80,20 +80,28 @@ readData = do
             Error msg -> error msg
             Success r -> r
 
+--------------------------------------------------------------------------------
+-- Various output dirs
+--------------------------------------------------------------------------------
+mkAllDirs :: ProcState ()
+mkAllDirs = mkdir atacSeqDir >> mkdir networkDir >> mkdir tfbsDir
+  where
+    mkdir x = x >>= liftIO . mktree . fromText . T.pack
+
 atacSeqDir :: ProcState FilePath
-atacSeqDir = do
-    dir <- getConfig' "outputDir"
-    return $ dir ++ "/ATAC_Seq/"
+atacSeqDir = (++ "/ATAC_Seq/") <$> getConfig' "outputDir"
 
 networkDir :: ProcState FilePath
-networkDir = do
-    dir <- getConfig' "outputDir"
-    return $ dir ++ "/Network/"
+networkDir = (++ "/Network/") <$> getConfig' "outputDir"
+
+tfbsDir :: ProcState FilePath
+tfbsDir = (++ "/TFBS/") <$> getConfig' "outputDir"
+
 
 graph :: Builder ()
 graph = do
-    node "init00" [| \() -> mkIndices >> readData |] $ do
-        label .= "Parse metadata"
+    node "init00" [| \() -> mkAllDirs >> mkIndices >> readData |] $ do
+        label .= "Initialization"
         stateful .= True
 
     node "atac00" [| return . (^._1) |] $ do
@@ -102,7 +110,7 @@ graph = do
     path ["init00", "atac00"]
 
     node "align00" [| \x -> bwaAlign <$> atacSeqDir <*>
-        (getConfig' "genome") <*> return (bwaCores .= 4) <*> return x >>= liftIO
+        (getConfig' "bwaIndex") <*> return (bwaCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-pe smp 4"
     node "align01" [| \x -> filterBam <$> atacSeqDir <*> return x
         >>= liftIO
@@ -119,11 +127,11 @@ graph = do
     node "peak01" [| \x -> callPeaks <$> atacSeqDir <*>
         return (return ()) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "peak02" [| \exps -> do
+    node "peak02" [| \xs -> do
         let f x = map (^.location) $ filter ((==NarrowPeakFile) . (^.format)) $ x^.files
-        scanMotifs <$> (getConfig' "genomeIndex") <*> (getConfig' "motifFile") <*>
-            return 1e-5 <*> ((++ "/TFBS_open_chromatin_union.bed") <$> atacSeqDir ) <*>
-            return (concatMap f (exps :: [Experiment ATAC_Seq])) >>= liftIO
+        scanMotifs <$> (getConfig' "seqIndex") <*> (getConfig' "motifFile") <*>
+            return 1e-5 <*> ((++ "/TFBS_open_chromatin_union.bed") <$> tfbsDir ) <*>
+            return (concatMap f xs) >>= liftIO
         |] $ stateful .= True
     path ["align03", "peak00", "peak01", "peak02"]
 
