@@ -7,7 +7,7 @@ packages:
 
     - location:
         git: https://github.com/kaizhang/SciFlow.git
-        commit: 82c309a60898cc0292fbf4d8802956e4ffebf2de
+        commit: e6fec402b8746ee02b9b7f057a4d8e8e7ef530cf
 
     - location:
         git: https://github.com/kaizhang/bio-experiments.git

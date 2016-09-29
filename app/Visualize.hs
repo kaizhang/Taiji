@@ -26,9 +26,11 @@ outputData :: FilePath
            -> ([T.Text], [B.ByteString], [[Double]])
            -> [(B.ByteString, Metrics)] -> IO ()
 outputData out (cts, geneNames, dat) metrics = do
-    let dat' = map toBS $ filter f $ zip metrics dat
+    let filteredData = map toBS $ filter f $ zip metrics dat
+        allData = map toBS $ zip metrics dat
         header = B.pack $ T.unpack $ T.intercalate "\t" $ "Gene" : cts
-    B.writeFile out $ B.unlines $ header : dat'
+    B.writeFile (out++"_filtered.tsv") $ B.unlines $ header : filteredData
+    B.writeFile (out++"_all.tsv") $ B.unlines $ header : allData
   where
     f ((_, Metrics m v fold), _) = m > 0.0001 && fold > 1.5
     toBS ((nm, _), xs) = B.intercalate "\t" $ nm : map toShortest xs

@@ -21,9 +21,10 @@ readExpression fl = do
     c <- B.readFile fl
     let ((_:header):dat) = map (B.split '\t') $ B.lines c
         rowNames = map head dat
-        dataTable = filtering $ map (map readDouble . tail) dat
+        dataTable = map (map readDouble . tail) dat
     return $ zipWith (\a b -> (a, M.fromList $ zip rowNames b)) header $
-        transpose $ zipWith zip dataTable $ computeZscore dataTable
+        transpose $ zipWith zip dataTable $ map computeZscore dataTable
   where
-    filtering = filter (\x -> not $ all (<1) x || all (==head x) x)
-    computeZscore = map (U.toList . scale . U.fromList)
+    computeZscore xs
+        | all (<1) xs || all (==head xs) xs = replicate (length xs) (-10)
+        | otherwise = U.toList $ scale $ U.fromList xs

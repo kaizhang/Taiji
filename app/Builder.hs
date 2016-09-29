@@ -96,15 +96,14 @@ graph = do
         label .= "Parse metadata"
         stateful .= True
 
-{-
     node "atac00" [| return . (^._1) |] $ do
         submitToRemote .= Just False
         label .= "Get ATAC-seq data"
     path ["init00", "atac00"]
 
     node "align00" [| \x -> bwaAlign <$> atacSeqDir <*>
-        (getConfig' "genome") <*> return (return ()) <*> return x >>= liftIO
-        |] $ batch .= 1 >> stateful .= True
+        (getConfig' "genome") <*> return (bwaCores .= 4) <*> return x >>= liftIO
+        |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-pe smp 4"
     node "align01" [| \x -> filterBam <$> atacSeqDir <*> return x
         >>= liftIO
         |] $ batch .= 1 >> stateful .= True
@@ -145,7 +144,6 @@ graph = do
         liftIO $ mapM (printEdgeList dir) xs
         |] $ batch .= 1 >> stateful .= True
     path ["ass01", "ass02", "ass03"]
-    -}
 
     node "rna00" [| return . (^._3) |] $ do
         submitToRemote .= Just False
@@ -153,8 +151,8 @@ graph = do
     node "rna01" [| \x -> do
         dir <- getConfig' "outputDir"
         starAlign <$> return (dir++"/RNA_Seq/") <*> getConfig' "starIndex" <*>
-            return (return ()) <*> return x >>= liftIO
-        |] $ stateful .= True
+            return (starCores .= 4) <*> return x >>= liftIO
+        |] $ stateful .= True >> remoteParam .= "-pe smp 4"
     node "rna02" [| \x -> do
         dir <- getConfig' "outputDir"
         rsemQuant <$> return (dir++"/RNA_Seq/") <*> getConfig' "rsemIndex" <*>
@@ -162,7 +160,6 @@ graph = do
         |] $ stateful .= True
     path ["init00", "rna00", "rna01", "rna02"]
 
-{-
     node "net00" [| \x -> do
         expression <- getConfigMaybe' "expression_profile"
         liftIO $ case expression of
@@ -171,6 +168,5 @@ graph = do
         |] $ stateful .= True
     path ["ass02", "net00"]
 
-    node "vis00" [| \x -> outputData "r.tsv" x (getMetrics x) |] $ submitToRemote .= Just False
+    node "vis00" [| \x -> outputData "ranks" x (getMetrics x) |] $ submitToRemote .= Just False
     ["net00"] ~> "vis00"
-    -}

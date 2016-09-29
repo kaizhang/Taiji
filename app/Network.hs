@@ -54,7 +54,7 @@ personalizedPageRank (rnaseq, es) = do
         let lookupExpr x = M.lookupDefault (0.01,-10) x $ fromJust $ lookup
                 (B.pack $ T.unpack $ e^.celltype) rnaseqData
             nodeWeights = map (exp . snd . lookupExpr) labs
-            edgeWeights = map (ihs' . fst . lookupExpr . nodeLab gr . snd) $ edges gr
+            edgeWeights = map (fst . lookupExpr . nodeLab gr . snd) $ edges gr
             labs = map (nodeLab gr) $ nodes gr
         return $ zip labs $
             personalizedPagerank gr nodeWeights (Just edgeWeights) 0.5
