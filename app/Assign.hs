@@ -18,7 +18,7 @@ import           Control.Arrow             (first, second, (&&&), (***))
 import           Control.Lens
 import           Data.Binary               (Binary (..), decodeFile, encodeFile)
 import qualified Data.ByteString.Char8     as B
-import           Data.CaseInsensitive      (mk, original)
+import           Data.CaseInsensitive      (mk)
 import           Data.Function             (on)
 import           Data.List
 import qualified Data.Map                  as M

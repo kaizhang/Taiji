@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Builder (graph) where
 
 import           Bio.Data.Experiment.Types
@@ -79,7 +80,9 @@ readData = do
         Nothing -> []
         Just x' -> case fromJSON x' of
             Error msg -> error msg
-            Success r -> r
+            Success r -> if any (isNothing . (^.groupName)) r
+                then error "Missing \"group\" field in the input file"
+                else r
 
 --------------------------------------------------------------------------------
 -- Various output dirs
@@ -174,13 +177,24 @@ graph = do
         |] $ stateful .= True
     path ["init00", "rna00", "rna01", "rna02", "rna03"]
 
-    node "net00" [| \x -> do
+    node "net00" [| \(x, expr) -> do
         expression <- getConfigMaybe' "expression_profile"
-        liftIO $ case expression of
-            Nothing -> pageRank x
-            Just e -> personalizedPageRank (e, x)
+        liftIO $ do
+            gene_expr <- case () of
+                _ | isJust expression -> do
+                        hPutStrLn stderr "Use user supplied gene expression profile."
+                        return expression
+                  | isJust expr -> return expr
+                  | otherwise -> return Nothing
+            case gene_expr of
+                Nothing -> do
+                    hPutStrLn stderr "Running PageRank..."
+                    pageRank x
+                Just e -> do
+                    hPutStrLn stderr "Running personalized PageRank..."
+                    personalizedPageRank (e, x)
         |] $ stateful .= True
-    path ["ass02", "net00"]
+    ["ass02", "rna03"] ~> "net00"
 
     node "vis00" [| \x -> outputData "ranks" x (getMetrics x) |] $ submitToRemote .= Just False
     ["net00"] ~> "vis00"

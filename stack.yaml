@@ -12,7 +12,7 @@ packages:
 
     - location:
         git: https://github.com/kaizhang/bio-experiments.git
-        commit: e125b18adde156d82e48ec57615c4992b724a3f0
+        commit: 0c95802cf2f6b7974441c7e2401566180f0030ac
 
     - location:
         git: https://github.com/kaizhang/haskell-igraph.git

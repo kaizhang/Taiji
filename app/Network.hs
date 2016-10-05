@@ -39,7 +39,7 @@ pageRank es = do
         let labs = map (nodeLab gr) $ nodes gr
         return $ zip labs $ pagerank gr Nothing 0.85
     let genes = nubSort $ concatMap (fst . unzip) results
-        expNames = map (^.eid) es
+        expNames = map (fromJust . (^.groupName)) es
         ranks = flip map results $ \xs ->
             let geneRanks = M.fromList xs
             in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
@@ -53,14 +53,14 @@ personalizedPageRank (rnaseq, es) = do
     results <- forM es $ \e -> do
         gr <- buildNet e
         let lookupExpr x = M.lookupDefault (0.01,-10) x $ fromJust $ lookup
-                (B.pack $ T.unpack $ e^.celltype) rnaseqData
+                (B.pack $ T.unpack $ fromJust $ e^.groupName) rnaseqData
             nodeWeights = map (exp . snd . lookupExpr) labs
             edgeWeights = map (sqrt . fst . lookupExpr . nodeLab gr . snd) $ edges gr
             labs = map (nodeLab gr) $ nodes gr
         return $ zip labs $
             personalizedPagerank gr nodeWeights (Just edgeWeights) 0.85
     let genes = nubSort $ concatMap (fst . unzip) results
-        expNames = map (^.eid) es
+        expNames = map (fromJust . (^.groupName)) es
         ranks = flip map results $ \xs ->
             let geneRanks = M.fromList xs
             in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
