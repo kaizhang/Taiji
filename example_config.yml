@@ -1,6 +1,6 @@
 # The path to a file specifying the input data sets. The software come with
 # an example file named "input.yaml".
-input: "data/input.yaml"
+input: "data/input.yml"
 
 # Directory containing the results.
 outputDir: "output/"

@@ -2,11 +2,13 @@
 
 module Visualize where
 
-import qualified Data.ByteString.Char8        as B
-import qualified Data.Text                    as T
-import qualified Data.Vector.Unboxed          as U
+import qualified Data.ByteString.Char8             as B
 import           Data.Double.Conversion.ByteString
-import           Statistics.Sample            (meanVarianceUnb)
+import qualified Data.Text                         as T
+import qualified Data.Vector.Unboxed               as U
+import           Statistics.Sample                 (meanVarianceUnb)
+
+import           Types
 
 
 data Metrics = Metrics

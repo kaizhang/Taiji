@@ -15,6 +15,7 @@ import           Control.Lens
 import           Control.Monad
 import           Data.Binary                       (decodeFile, encodeFile)
 import qualified Data.ByteString.Char8             as B
+import           Data.CaseInsensitive              (original)
 import           Data.Double.Conversion.ByteString (toShortest)
 import           Data.Function                     (on)
 import qualified Data.HashMap.Strict               as M
@@ -29,6 +30,7 @@ import           IGraph.Structure                  (pagerank,
 import           Scientific.Workflow
 
 import           Expression
+import           Types
 
 pageRank :: [Experiment a] -> IO ([T.Text], [B.ByteString], [[Double]])
 pageRank es = do
@@ -41,7 +43,7 @@ pageRank es = do
         ranks = flip map results $ \xs ->
             let geneRanks = M.fromList xs
             in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
-    return (expNames, genes, transpose ranks)
+    return (expNames, map original genes, transpose ranks)
 
 personalizedPageRank :: (FilePath, [Experiment a])
                      -> IO ([T.Text], [B.ByteString], [[Double]])
@@ -62,23 +64,22 @@ personalizedPageRank (rnaseq, es) = do
         ranks = flip map results $ \xs ->
             let geneRanks = M.fromList xs
             in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
-    return (expNames, genes, transpose ranks)
+    return (expNames, map original genes, transpose ranks)
 
-buildNet :: Experiment a -> IO (LGraph D B.ByteString ())
+buildNet :: Experiment a -> IO (LGraph D GeneName ())
 buildNet e = do
     let [fl] = filter (\x -> x^.keywords == ["gene-TF assignment"]) $ e^.files
-    result <- decodeFile $ fl^.location :: IO [(B.ByteString, [(B.ByteString, [BED])])]
+    result <- decodeFile $ fl^.location :: IO [Linkage]
     return $ fromLabeledEdges $ flip concatMap result $ \(a, b) ->
         zip (zip (repeat a) $ fst $ unzip b) $ repeat ()
 
 printEdgeList :: FilePath -> Experiment a -> IO ()
 printEdgeList dir e = do
     let [fl] = filter (\x -> x^.keywords == ["gene-TF assignment"]) $ e^.files
-    result <- decodeFile $ fl^.location :: IO [(B.ByteString, [(B.ByteString, [BED])])]
-    let output = dir ++ "/" ++ T.unpack (e^.celltype) ++ "_" ++
-            T.unpack (e^.target) ++ "_associations.tsv"
+    result <- decodeFile $ fl^.location :: IO [Linkage]
+    let output = dir ++ "/" ++ T.unpack (e^.eid) ++ "_network.tsv"
     B.writeFile output $ B.unlines $ flip map result $ \(a,b) ->
-        B.intercalate "\t" [a, B.intercalate "," $ fst $ unzip b]
+        B.intercalate "\t" [original a, B.intercalate "," $ map original $ fst $ unzip b]
 
 writeTSV :: FilePath -> ([T.Text], [B.ByteString], [[Double]]) -> IO ()
 writeTSV output (colNames, rowNames, dat) = B.writeFile output $ B.unlines $

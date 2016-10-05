@@ -1,9 +1,12 @@
 -- Assign TFs to their targets
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Assign
     ( getDomains
     , linkGeneToTFs
+    , GeneName
+    , Linkage
     ) where
 
 import           Bio.Data.Bed
@@ -13,8 +16,9 @@ import           Bio.Pipeline.Instances    ()
 import           Bio.Utils.Misc            (readInt)
 import           Control.Arrow             (first, second, (&&&), (***))
 import           Control.Lens
-import           Data.Binary               (decodeFile, encodeFile)
+import           Data.Binary               (Binary (..), decodeFile, encodeFile)
 import qualified Data.ByteString.Char8     as B
+import           Data.CaseInsensitive      (mk, original)
 import           Data.Function             (on)
 import           Data.List
 import qualified Data.Map                  as M
@@ -22,8 +26,7 @@ import           Data.Maybe
 import           Data.Ord
 import qualified Data.Text                 as T
 
--- | Gene and its regulators
-type Linkage = (B.ByteString, [(B.ByteString, [BED])])
+import           Types
 
 getDomains :: FilePath   -- output
            -> FilePath   -- annotation
@@ -50,7 +53,7 @@ linkGeneToTFs dir (e, tfbs) = do
     let result :: [Linkage]
         result = map (second (map ((head *** id) . unzip) . groupBy ((==) `on` fst) .
             sortBy (comparing fst) . map (getTFName &&& id))) $ M.toList $
-            M.fromListWith (++) $ map (first (fromJust . bedName)) $
+            M.fromListWith (++) $ map (first (mk . fromJust . bedName)) $
             findRegulators genes peaks sites
         output = dir ++ "/" ++ T.unpack (e^.eid) ++ ".assign"
         newFile = format .~ Other $
@@ -60,7 +63,7 @@ linkGeneToTFs dir (e, tfbs) = do
     encodeFile output result
     return $ files .~ [newFile] $ e
   where
-    getTFName = head . B.split '+' . fromJust . bedName
+    getTFName = mk . head . B.split '+' . fromJust . bedName
 
 
 findRegulators :: [BED]          -- ^ gene domains

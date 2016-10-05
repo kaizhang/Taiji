@@ -10,7 +10,7 @@ maintainer:          kai@kzhang.org
 copyright:           2016 Kai Zhang
 category:            Bio
 build-type:          Simple
-extra-source-files:  stack.yaml, example_config.yml
+extra-source-files:  stack.yaml, example_config.yml, example_input.yml
 cabal-version:       >=1.10
 
 executable taiji
@@ -25,6 +25,7 @@ executable taiji
     , bio-experiments
     , bio-pipelines
     , bioinformatics-toolkit
+    , case-insensitive
     , containers
     , conduit-combinators
     , cereal
@@ -50,6 +51,7 @@ executable taiji
     Expression
     Network
     Visualize
+    Types
 
 source-repository head
   type:     git

@@ -24,6 +24,7 @@ import           System.IO                 (hPutStrLn, stderr)
 import           Turtle                    (fromText, mktree, testfile)
 
 import           Assign
+import           Expression
 import           Network
 import           Visualize
 
@@ -160,13 +161,18 @@ graph = do
         dir <- getConfig' "outputDir"
         starAlign <$> return (dir++"/RNA_Seq/") <*> getConfig' "starIndex" <*>
             return (starCores .= 4) <*> return x >>= liftIO
-        |] $ stateful .= True >> remoteParam .= "-pe smp 4"
+        |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
     node "rna02" [| \x -> do
         dir <- getConfig' "outputDir"
         rsemQuant <$> return (dir++"/RNA_Seq/") <*> getConfig' "rsemIndex" <*>
-            return (return ()) <*> return x >>= liftIO
+            return (rsemCores .= 4) <*> return x >>= liftIO
+        |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
+    node "rna03" [| \x -> do
+        dir <- getConfig' "outputDir"
+        combineExpression <$> return (dir++"/RNA_Seq/gene_expression.tsv") <*>
+            getConfig' "annotation" <*> return x >>= liftIO
         |] $ stateful .= True
-    path ["init00", "rna00", "rna01", "rna02"]
+    path ["init00", "rna00", "rna01", "rna02", "rna03"]
 
     node "net00" [| \x -> do
         expression <- getConfigMaybe' "expression_profile"
