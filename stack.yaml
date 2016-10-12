@@ -1,9 +1,8 @@
-resolver: lts-7.0
+resolver: lts-7.3
 
 packages:
     - '.'
     - '../bio-pipelines'
-    - '../bioinformatics-toolkit'
     - '../SciFlow'
 
     #- location:
@@ -24,7 +23,7 @@ packages:
 
 extra-deps:
     - samtools-0.2.4.3
-    #- bioinformatics-toolkit-0.2.2
+    - bioinformatics-toolkit-0.2.3
     - hexpat-0.20.9
     - List-0.5.2
 

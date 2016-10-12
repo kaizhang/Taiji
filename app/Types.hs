@@ -2,8 +2,8 @@
 
 module Types where
 
+import           Bio.Data.Bed          (BED)
 import           Data.Binary           (Binary (..))
-import Bio.Data.Bed (BED)
 import qualified Data.ByteString.Char8 as B
 import           Data.CaseInsensitive  (CI, mk, original)
 

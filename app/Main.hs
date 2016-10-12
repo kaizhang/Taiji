@@ -1,11 +1,16 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Main where
 
-import Scientific.Workflow.Main
-import Bio.Pipeline.Instances ()
+import           Bio.Pipeline.Instances   ()
+import           Scientific.Workflow.Main
 
-import Builder (graph)
+import qualified Component.Initialization as Initialization
+import qualified Component.ATACSeq        as ATACSeq
+import qualified Component.Network        as Network
+import qualified Component.RNASeq         as RNASeq
+import qualified Component.TFBS           as TFBS
 
-defaultMain graph
+defaultMain $ Initialization.builder >> ATACSeq.builder >>
+    Network.builder >> RNASeq.builder >> TFBS.builder

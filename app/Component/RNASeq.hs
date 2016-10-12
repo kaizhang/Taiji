@@ -1,17 +1,21 @@
--- Gene expression
-{-# LANGUAGE GADTs             #-}
-{-# LANGUAGE OverloadedLists   #-}
+--------------------------------------------------------------------------------
+-- RNA-seq data processing
+--------------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
-module Expression where
+module Component.RNASeq (builder) where
 
 import           Bio.Data.Experiment.Types
+import           Bio.Pipeline.NGS
 import           Bio.RealWorld.GENCODE
 import           Bio.Utils.Functions               (scale)
 import           Bio.Utils.Misc                    (readDouble)
 import           Control.Arrow                     (second)
 import           Control.Lens
 import           Control.Monad                     (forM)
+import           Control.Monad.IO.Class            (liftIO)
 import qualified Data.ByteString.Char8             as B
 import           Data.CaseInsensitive              (mk, original)
 import           Data.Double.Conversion.ByteString (toShortest)
@@ -21,25 +25,31 @@ import           Data.List.Ordered                 (nubSort)
 import           Data.Maybe                        (fromJust)
 import qualified Data.Text                         as T
 import qualified Data.Vector.Unboxed               as U
+import           Scientific.Workflow
 
-import           Types
+import           Constants
 
--- | Read RNA expression data
-readExpression :: FilePath
-               -> IO [( B.ByteString    -- ^ cell type
-                     , M.HashMap GeneName (Double, Double)  -- ^ absolute value and z-score
-                     )]
-readExpression fl = do
-    c <- B.readFile fl
-    let ((_:header):dat) = map (B.split '\t') $ B.lines c
-        rowNames = map (mk . head) dat
-        dataTable = map (map readDouble . tail) dat
-    return $ zipWith (\a b -> (a, M.fromList $ zip rowNames b)) header $
-        transpose $ zipWith zip dataTable $ map computeZscore dataTable
-  where
-    computeZscore xs
-        | all (<1) xs || all (==head xs) xs = replicate (length xs) (-10)
-        | otherwise = U.toList $ scale $ U.fromList xs
+builder :: Builder ()
+builder = do
+    node "rna00" [| return . (^._3) |] $ do
+        submitToRemote .= Just False
+        label .= "Get RNA-seq data"
+    node "rna01" [| \x -> do
+        dir <- getConfig' "outputDir"
+        starAlign <$> return (dir++"/RNA_Seq/") <*> getConfig' "starIndex" <*>
+            return (starCores .= 4) <*> return x >>= liftIO
+        |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
+    node "rna02" [| \x -> do
+        dir <- getConfig' "outputDir"
+        rsemQuant <$> return (dir++"/RNA_Seq/") <*> getConfig' "rsemIndex" <*>
+            return (rsemCores .= 4) <*> return x >>= liftIO
+        |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
+    node "rna03" [| \x -> do
+        dir <- getConfig' "outputDir"
+        combineExpression <$> return (dir++"/RNA_Seq/gene_expression.tsv") <*>
+            getConfig' "annotation" <*> return x >>= liftIO
+        |] $ stateful .= True
+    path ["init00", "rna00", "rna01", "rna02", "rna03"]
 
 -- | Combine RNA expression data into a table
 combineExpression :: FilePath

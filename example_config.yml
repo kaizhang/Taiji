@@ -48,7 +48,7 @@ bwaIndex: "/home/kai/genome/GRCh38/Sequence/BWAIndex/genome.fa"
 # For example, you need at least 30G memory for human genome.
 
 # Directory containing the STAR indices.
-starIndex: "/home/kai/genome/GRCh38/Sequence/STAR_index/"
+# starIndex: "/home/kai/genome/GRCh38/Sequence/STAR_index/"
 
 # RSEM index prefix
-rsemIndex: "/home/kai/genome/GRCh38/Sequence/RSEM_index/GRCh38"
+# rsemIndex: "/home/kai/genome/GRCh38/Sequence/RSEM_index/GRCh38"
