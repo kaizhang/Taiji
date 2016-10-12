@@ -32,7 +32,8 @@ builder = do
 
 -- | Create directories
 mkAllDirs :: ProcState ()
-mkAllDirs = mkdir atacSeqDir >> mkdir networkDir >> mkdir tfbsDir
+mkAllDirs = mkdir atacOutput >> mkdir netOutput >> mkdir tfbsOutput >>
+    mkdir rnaOutput >> mkdir rankOutput
   where
     mkdir x = x >>= liftIO . mktree . fromText . T.pack
 

@@ -2,12 +2,10 @@ resolver: lts-7.3
 
 packages:
     - '.'
-    - '../bio-pipelines'
-    - '../SciFlow'
 
-    #- location:
-    #    git: https://github.com/kaizhang/SciFlow.git
-    #    commit: e6fec402b8746ee02b9b7f057a4d8e8e7ef530cf
+    - location:
+        git: https://github.com/kaizhang/SciFlow.git
+        commit: 97f967fc6821dc37349bffb7e97c3187584e229a
 
     - location:
         git: https://github.com/kaizhang/bio-experiments.git
@@ -17,9 +15,9 @@ packages:
         git: https://github.com/kaizhang/haskell-igraph.git
         commit: 670c670d7165c545b12d2db663ec7fc23966385a
 
-    #- location:
-    #    git: https://github.com/kaizhang/bio-pipelines.git
-    #    commit: 3242aa63d40152218fb48f9f3dea659eb33d14e7
+    - location:
+        git: https://github.com/kaizhang/bio-pipelines.git
+        commit: baa7e272f819d79b4ad0317c944ea61d9942ad4e
 
 extra-deps:
     - samtools-0.2.4.3

@@ -40,7 +40,7 @@ import           Types
 
 builder :: Builder ()
 builder = do
-    node "ass00" [| \x -> getDomains <$> networkDir <*>
+    node "ass00" [| \x -> getDomains <$> netOutput <*>
         getConfig' "annotation" <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     ["peak01"] ~> "ass00"
@@ -49,11 +49,11 @@ builder = do
         submitToRemote .= Just False
     ["ass00", "peak02"] ~> "ass01"
     node "ass02" [| \xs -> do
-        dir <- networkDir
+        dir <- netOutput
         liftIO $ mapM (linkGeneToTFs dir) xs
         |] $ batch .= 1 >> stateful .= True
     node "ass03" [| \xs -> do
-        dir <- networkDir
+        dir <- netOutput
         liftIO $ mapM (printEdgeList dir) xs
         |] $ batch .= 1 >> stateful .= True
     path ["ass01", "ass02", "ass03"]

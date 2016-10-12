@@ -3,11 +3,17 @@ module Constants where
 
 import           Scientific.Workflow (ProcState, getConfig')
 
-atacSeqDir :: ProcState FilePath
-atacSeqDir = (++ "/ATAC_Seq/") <$> getConfig' "outputDir"
+atacOutput :: ProcState FilePath
+atacOutput = (++ "/ATAC_Seq/") <$> getConfig' "outputDir"
 
-networkDir :: ProcState FilePath
-networkDir = (++ "/Network/") <$> getConfig' "outputDir"
+netOutput :: ProcState FilePath
+netOutput = (++ "/Network/") <$> getConfig' "outputDir"
 
-tfbsDir :: ProcState FilePath
-tfbsDir = (++ "/TFBS/") <$> getConfig' "outputDir"
+tfbsOutput :: ProcState FilePath
+tfbsOutput = (++ "/TFBS/") <$> getConfig' "outputDir"
+
+rnaOutput :: ProcState FilePath
+rnaOutput = (++ "/RNA_Seq/") <$> getConfig' "outputDir"
+
+rankOutput :: ProcState FilePath
+rankOutput = (++ "/Rank/") <$> getConfig' "outputDir"

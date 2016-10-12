@@ -61,7 +61,10 @@ builder = do
         |] $ stateful .= True
     ["ass02", "rna03"] ~> "net00"
 
-    node "vis00" [| \x -> outputData "ranks" x (getMetrics x) |] $ submitToRemote .= Just False
+    node "vis00" [| \x -> do
+        dir <- rankOutput
+        liftIO $ outputData dir x (getMetrics x)
+        |] $ submitToRemote .= Just False >> stateful .= True
     ["net00"] ~> "vis00"
 
 
@@ -123,12 +126,6 @@ buildNet e = do
     return $ fromLabeledEdges $ flip concatMap result $ \(a, b) ->
         zip (zip (repeat a) $ fst $ unzip b) $ repeat ()
 
-writeTSV :: FilePath -> ([T.Text], [B.ByteString], [[Double]]) -> IO ()
-writeTSV output (colNames, rowNames, dat) = B.writeFile output $ B.unlines $
-    B.intercalate "\t" ("Gene" : map (B.pack . T.unpack) colNames) :
-    map (\(a,b) -> B.intercalate "\t" $ a : map toShortest b)
-        (zip rowNames dat)
-
 data Metrics = Metrics
     { averageRank   :: Double
     , variability   :: Double
@@ -145,12 +142,12 @@ getMetrics (cts, geneNames, dat) = zip geneNames $ map (f . U.fromList) dat
 outputData :: FilePath
            -> ([T.Text], [B.ByteString], [[Double]])
            -> [(B.ByteString, Metrics)] -> IO ()
-outputData out (cts, geneNames, dat) metrics = do
+outputData dir (cts, geneNames, dat) metrics = do
     let filteredData = map toBS $ filter f $ zip metrics dat
         allData = map toBS $ zip metrics dat
         header = B.pack $ T.unpack $ T.intercalate "\t" $ "Gene" : cts
-    B.writeFile (out++"_filtered.tsv") $ B.unlines $ header : filteredData
-    B.writeFile (out++"_all.tsv") $ B.unlines $ header : allData
+    B.writeFile (dir++"GeneRank_filtered.tsv") $ B.unlines $ header : filteredData
+    B.writeFile (dir++"GeneRank_all.tsv") $ B.unlines $ header : allData
   where
     f ((_, Metrics m v fold), _) = m > 0.0001 && fold > 1.5
     toBS ((nm, _), xs) = B.intercalate "\t" $ nm : map toShortest xs

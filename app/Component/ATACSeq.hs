@@ -22,22 +22,22 @@ builder = do
         label .= "Get ATAC-seq data"
     path ["init00", "atac00"]
 
-    node "align00" [| \x -> bwaAlign <$> atacSeqDir <*>
+    node "align00" [| \x -> bwaAlign <$> atacOutput <*>
         (getConfig' "bwaIndex") <*> return (bwaCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-pe smp 4"
-    node "align01" [| \x -> filterBam <$> atacSeqDir <*> return x
+    node "align01" [| \x -> filterBam <$> atacOutput <*> return x
         >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     node "align02" [| \x -> removeDuplicates <$>
-        getConfig' "picard" <*> atacSeqDir  <*> return x >>= liftIO
+        getConfig' "picard" <*> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "align03" [| \x -> bamToBed <$> atacSeqDir <*> return x >>= liftIO
+    node "align03" [| \x -> bamToBed <$> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "align04" [| \x -> mergeReplicatesBed <$> atacSeqDir <*> return x >>= liftIO
+    node "align04" [| \x -> mergeReplicatesBed <$> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     node "peak00" [| mapM $ \x -> return (x, Nothing) |] $
         batch .= 1
-    node "peak01" [| \x -> callPeaks <$> atacSeqDir <*>
+    node "peak01" [| \x -> callPeaks <$> atacOutput <*>
         return (return ()) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     path ["atac00", "align00", "align01", "align02", "align03", "align04", "peak00", "peak01"]
