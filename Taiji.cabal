@@ -51,9 +51,10 @@ executable taiji
     Component.Network
     Component.RNASeq
     Component.TFBS
+    Component.Rank
     Constants
     Types
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/taiji
+  location: https://github.com/kaizhang/Taiji
