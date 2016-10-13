@@ -1,3 +1,7 @@
+################################################################################
+# NOTE: Lines starting with a '#' character are comments.
+################################################################################
+
 # The path to a file specifying the input data sets. The software come with
 # an example file named "input.yaml".
 input: "data/input.yml"
@@ -7,6 +11,7 @@ outputDir: "output/"
 
 # The path to the picard tools.
 picard: "/home/kai/software/picard-tools-1.140/picard.jar"
+
 
 ################################################################################
 # Genome Indices
@@ -22,11 +27,18 @@ genome: "/home/kai/genome/GRCh38/Sequence/BWAIndex/genome.fa"
 # available at http://www.gencodegenes.org/
 annotation: "/home/kai/genome/GRCh38/Annotation/gencode.v25.annotation.gtf"
 
-# MEME format file containing motifs
+# MEME format file containing motifs. Human and mouse motif files can be
+# here: https://github.com/kaizhang/Taiji/tree/master/data/motifs
 motifFile: "/home/kai/motif_databases/cisBP_human.meme"
 
-# Optional expression profile
-# expression_profile:
+# Optional expression profile. If provided, the data in this file will be used in
+# personalized PageRank. The format of this file should be:
+# GeneName <Tab> GroupName1 <Tab> GroupName2 <Tab> GroupName3
+# Gene1    <Tab> xxx        <Tab> xxx        <Tab> xxx
+# Gene2    <Tab> xxx        <Tab> xxx        <Tab> xxx
+
+# expression_profile: "expression.tsv"
+
 
 ################################################################################
 # You don't have to physically provide the following files. But you do need to
