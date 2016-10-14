@@ -10,21 +10,19 @@ module Component.RNASeq (builder) where
 import           Bio.Data.Experiment.Types
 import           Bio.Pipeline.NGS
 import           Bio.RealWorld.GENCODE
-import           Bio.Utils.Functions               (scale)
 import           Bio.Utils.Misc                    (readDouble)
 import           Control.Arrow                     (second)
 import           Control.Lens
 import           Control.Monad                     (forM)
 import           Control.Monad.IO.Class            (liftIO)
 import qualified Data.ByteString.Char8             as B
-import           Data.CaseInsensitive              (mk, original)
+import           Data.CaseInsensitive              (original)
 import           Data.Double.Conversion.ByteString (toShortest)
 import qualified Data.HashMap.Strict               as M
 import           Data.List
 import           Data.List.Ordered                 (nubSort)
 import           Data.Maybe                        (fromJust)
 import qualified Data.Text                         as T
-import qualified Data.Vector.Unboxed               as U
 import           Scientific.Workflow
 
 import           Constants
@@ -34,18 +32,13 @@ builder = do
     node "rna00" [| return . (^._3) |] $ do
         submitToRemote .= Just False
         label .= "Get RNA-seq data"
-    node "rna01" [| \x -> do
-        dir <- getConfig' "outputDir"
-        starAlign <$> rnaOutput <*> getConfig' "starIndex" <*>
+    node "rna01" [| \x -> starAlign <$> rnaOutput <*> getConfig' "starIndex" <*>
             return (starCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
-    node "rna02" [| \x -> do
-        dir <- getConfig' "outputDir"
-        rsemQuant <$> rnaOutput <*> getConfig' "rsemIndex" <*>
+    node "rna02" [| \x -> rsemQuant <$> rnaOutput <*> getConfig' "rsemIndex" <*>
             return (rsemCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
-    node "rna03" [| \x -> do
-        dir <- getConfig' "outputDir"
+    node "rna03" [| \x ->
         combineExpression <$> fmap (++"/gene_expression.tsv") rnaOutput <*>
             getConfig' "annotation" <*> return x >>= liftIO
         |] $ stateful .= True

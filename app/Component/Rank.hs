@@ -8,26 +8,21 @@
 
 module Component.Rank (builder) where
 
-import           Bio.Data.Bed
 import           Bio.Data.Experiment.Types
-import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.Instances            ()
 import           Bio.Utils.Functions               (scale)
-import           Bio.Utils.Misc                    (readDouble, readInt)
+import           Bio.Utils.Misc                    (readDouble)
 import           Conduit
-import           Control.Arrow                     (first, second, (&&&), (***))
 import           Control.Lens
 import           Control.Monad
-import           Data.Binary                       (decodeFile, encodeFile)
+import           Data.Binary                       (decodeFile)
 import qualified Data.ByteString.Char8             as B
 import           Data.CaseInsensitive              (mk, original)
 import           Data.Double.Conversion.ByteString (toShortest)
-import           Data.Function                     (on)
 import qualified Data.HashMap.Strict               as M
 import           Data.List
 import           Data.List.Ordered                 (nubSort)
 import           Data.Maybe
-import           Data.Ord
 import qualified Data.Text                         as T
 import qualified Data.Vector.Unboxed               as U
 import           IGraph
