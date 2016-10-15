@@ -17,10 +17,12 @@ picard: "/home/kai/software/picard-tools-1.140/picard.jar"
 # Genome Indices
 ################################################################################
 
-# Complete genome in a single plain FASTA file. Genomes can be downloaded from http://hgdownload.cse.ucsc.edu/downloads.html.
+# Complete genome in a SINGLE plain FASTA file. Genomes can be downloaded from http://hgdownload.cse.ucsc.edu/downloads.html.
 # For example, this link gives you the complete human genome:
 # http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
 # Important: Remember to ungzip the file using "gzip -d hg38.fa.gz"!
+# Tip: To make a single genome file from multiple fastq files, execute:
+# `cat chr1.fa chr2.fa chr3.fa > all.fa`
 genome: "/home/kai/genome/GRCh38/Sequence/BWAIndex/genome.fa"
 
 # Genome annotation in *GTF* format. For human and mouse, Gencode annotations are
