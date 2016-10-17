@@ -37,13 +37,12 @@ import           Types
 
 builder :: Builder ()
 builder = do
-    node "net00" [| \(x, expr) -> do
-        expression <- getConfigMaybe' "expression_profile"
+    node "net00" [| \(inputData, x, expr) -> do
         liftIO $ do
             gene_expr <- case () of
-                _ | isJust expression -> do
+                _ | isJust (inputData^._4) -> do
                         hPutStrLn stderr "Use user supplied gene expression profile."
-                        return expression
+                        return $ inputData^._4
                   | isJust expr -> return expr
                   | otherwise -> return Nothing
             case gene_expr of
@@ -53,8 +52,8 @@ builder = do
                 Just e -> do
                     hPutStrLn stderr "Running personalized PageRank..."
                     personalizedPageRank (e, x)
-        |] $ stateful .= True
-    ["ass02", "rna03"] ~> "net00"
+        |] $ return ()
+    ["init00", "ass02", "rna03"] ~> "net00"
 
     node "vis00" [| \x -> do
         dir <- rankOutput

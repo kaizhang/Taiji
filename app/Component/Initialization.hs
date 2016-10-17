@@ -12,7 +12,7 @@ import           Bio.Pipeline.NGS
 import           Bio.Seq.IO                (mkIndex)
 import           Control.Lens
 import           Control.Monad.IO.Class    (liftIO)
-import           Data.Aeson.Types          (Result (..), fromJSON)
+import           Data.Aeson.Types          (Result (..), Value (..), fromJSON)
 import qualified Data.HashMap.Strict       as M
 import           Data.Maybe                (isNothing)
 import qualified Data.Text                 as T
@@ -76,13 +76,17 @@ mkIndices = do
 -- | Read input data information.
 readData ::  ProcState ( [Experiment ATAC_Seq]
                        , [Experiment ChIP_Seq]
-                       , [Experiment RNA_Seq] )
+                       , [Experiment RNA_Seq]
+                       , Maybe FilePath )
 readData = do
     inputFl <- getConfig' "input"
     Just dat <- liftIO (decodeFile inputFl  :: IO (Maybe Object))
     return ( parse $ M.lookup "atac-seq" dat
            , parse $ M.lookup "chip-seq" dat
            , parse $ M.lookup "rna-seq" dat
+           , case M.lookup "expression_profile" dat of
+               Nothing -> Nothing
+               Just (String x) -> Just $ T.unpack x
            )
   where
     parse x = case x of

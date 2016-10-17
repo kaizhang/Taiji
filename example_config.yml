@@ -33,14 +33,6 @@ annotation: "/home/kai/genome/GRCh38/Annotation/gencode.v25.annotation.gtf"
 # here: https://github.com/kaizhang/Taiji/tree/master/data/motifs
 motifFile: "/home/kai/motif_databases/cisBP_human.meme"
 
-# Optional expression profile. If provided, the data in this file will be used in
-# personalized PageRank. The format of this file should be:
-# GeneName <Tab> GroupName1 <Tab> GroupName2 <Tab> GroupName3
-# Gene1    <Tab> xxx        <Tab> xxx        <Tab> xxx
-# Gene2    <Tab> xxx        <Tab> xxx        <Tab> xxx
-
-# expression_profile: "expression.tsv"
-
 
 ################################################################################
 # You don't have to physically provide the following files. But you do need to

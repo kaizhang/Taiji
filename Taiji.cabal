@@ -24,7 +24,7 @@ executable taiji
     , binary
     , bio-experiments
     , bio-pipelines
-    , bioinformatics-toolkit >=0.2.3
+    , bioinformatics-toolkit >=0.2.4
     , case-insensitive
     , containers
     , conduit-combinators

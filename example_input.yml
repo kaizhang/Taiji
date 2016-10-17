@@ -17,3 +17,13 @@ atac-seq:
         rep: 1
       - path: /resource/RA/RA_ChIP-Seq/ATAC-Seq/fastq_merged_UCSD/OA1027_merged_R2.fastq.gz
         rep: 2
+
+
+# Optional expression profile. If provided, the data in this file will be used in
+# the personalized PageRank. RNA-seq data will not be used.
+# The format of this file should be:
+# GeneName <Tab> GroupName1 <Tab> GroupName2 <Tab> GroupName3
+# Gene1    <Tab> xxx        <Tab> xxx        <Tab> xxx
+# Gene2    <Tab> xxx        <Tab> xxx        <Tab> xxx
+
+# expression_profile: "path-to-the-file/expression.tsv"

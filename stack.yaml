@@ -17,11 +17,10 @@ packages:
 
     - location:
         git: https://github.com/kaizhang/bio-pipelines.git
-        commit: baa7e272f819d79b4ad0317c944ea61d9942ad4e
+        commit: d2f31a8ab3d5a701cd0861bfc5355662a47caac8
 
 extra-deps:
-    - samtools-0.2.4.3
-    - bioinformatics-toolkit-0.2.3
+    - bioinformatics-toolkit-0.2.4
     - hexpat-0.20.9
     - List-0.5.2
     - drmaa-0.1.0.1
