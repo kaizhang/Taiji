@@ -23,7 +23,7 @@ picard: "/home/kai/software/picard-tools-1.140/picard.jar"
 # Important: Remember to ungzip the file using "gzip -d hg38.fa.gz"!
 # Tip: To make a single genome file from multiple fastq files, execute:
 # `cat chr1.fa chr2.fa chr3.fa > all.fa`
-genome: "/home/kai/genome/GRCh38/Sequence/BWAIndex/genome.fa"
+genome: "/home/kai/genome/GRCh38/genome.fa"
 
 # Genome annotation in *GTF* format. For human and mouse, Gencode annotations are
 # available at http://www.gencodegenes.org/
@@ -38,8 +38,8 @@ motifFile: "/home/kai/motif_databases/cisBP_human.meme"
 # You don't have to physically provide the following files. But you do need to
 # specify the locations where these files will be generated automatically if
 # they are absent. Note the program DO NOT overwrite existing files/directories
-# so that you can provide your own indices without having the program generate
-# them. If you want to re-generate indices, make sure delete correponding
+# so that these files can be reused between different runs.
+# If you want to re-generate indices, make sure delete correponding
 # files/directories first.
 ################################################################################
 

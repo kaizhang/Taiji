@@ -1,23 +1,42 @@
-rna-seq:
-  - id: OA1027_RNA
-    group: OA1027
+# Each experiment must have a unique ID. Related experiments must share the same
+# group name. For example, you want to use "spleen" as the group name for
+# "spleen_ATAC_Seq" and "spleen_RNA_Seq".
+
+RNA-Seq:
+  - id: spleen_RNA
+    group: spleen
     target: RNA
     files:
-      - path: data/RNA_test.fastq.gz
+      - path: RNA-seq/spleen-filename.fastq.gz
         rep: 1
-
-chip-seq: []
-
-atac-seq:
-  - id: OA1027_ATAC
-    group: OA1027
-    target: ATAC
+  - id: liver_RNA
+    group: liver
+    target: RNA
     files:
-      - path: /resource/RA/RA_ChIP-Seq/ATAC-Seq/fastq_merged_UCSD/OA1027_merged_R1.fastq.gz
+      - path: RNA-seq/liver-filename-replicate1.fastq.gz
         rep: 1
-      - path: /resource/RA/RA_ChIP-Seq/ATAC-Seq/fastq_merged_UCSD/OA1027_merged_R2.fastq.gz
+      - path: RNA-seq/liver-filename-replicate2.fastq.gz
         rep: 2
 
+ChIP-Seq: []
+
+ATAC-Seq:
+  - id: spleen_ATAC
+    group: spleen
+    target: ATAC
+    files:
+      - path: ATAC-Seq/spleen-filename-replicate1.fastq.gz
+        rep: 1
+      - path: ATAC-Seq/spleen-filename-replicate2.fastq
+        rep: 2
+      - path: ATAC-Seq/spleen-filename-replicate3.fastq
+        rep: 3
+  - id: liver_ATAC
+    group: liver
+    target: ATAC
+    files:
+      - path: ATAC-Seq/liver-filename-replicate1.fastq.gz
+        rep: 1
 
 # Optional expression profile. If provided, the data in this file will be used in
 # the personalized PageRank. RNA-seq data will not be used.

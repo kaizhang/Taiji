@@ -16,7 +16,7 @@ cabal-version:       >=1.10
 executable taiji
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -Wall
+  ghc-options:         -threaded -Wall -- -optl-static -optc-static -optl-pthread
   build-depends:
       base >=4 && <5
     , aeson

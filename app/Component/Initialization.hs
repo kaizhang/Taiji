@@ -80,15 +80,22 @@ readData ::  ProcState ( [Experiment ATAC_Seq]
                        , Maybe FilePath )
 readData = do
     inputFl <- getConfig' "input"
-    Just dat <- liftIO (decodeFile inputFl  :: IO (Maybe Object))
-    return ( parse $ M.lookup "atac-seq" dat
-           , parse $ M.lookup "chip-seq" dat
-           , parse $ M.lookup "rna-seq" dat
-           , case M.lookup "expression_profile" dat of
+    dat <- liftIO $ readYml inputFl
+    return ( parse $ M.lookup "ATAC-SEQ" dat
+           , parse $ M.lookup "CHIP-SEQ" dat
+           , parse $ M.lookup "RNA-SEQ" dat
+           , case M.lookup "EXPRESSION_PROFILE" dat of
                Nothing -> Nothing
                Just (String x) -> Just $ T.unpack x
            )
   where
+    readYml :: FilePath -> IO Object
+    readYml fl = do
+        result <- decodeFile fl
+        case result of
+            Nothing -> error "Unable to read input file. Formatting error!"
+            Just dat -> return $ M.fromList $
+                map (\(k, v) -> (T.toUpper k, v)) $ M.toList dat
     parse x = case x of
         Nothing -> []
         Just x' -> case fromJSON x' of
