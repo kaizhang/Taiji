@@ -31,7 +31,7 @@ builder = do
     node "align02" [| \x -> removeDuplicates <$>
         getConfig' "picard" <*> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "align03" [| \x -> bamToBed <$> atacOutput <*> return x >>= liftIO
+    node "align03" [| \x -> bam2Bed <$> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     node "align04" [| \x -> mergeReplicatesBed <$> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
