@@ -22,8 +22,8 @@ builder = do
         label .= "Get ATAC-seq data"
     path ["init00", "atac00"]
 
-    node "align00" [| \x -> bwaAlign <$> atacOutput <*>
-        (getConfig' "bwaIndex") <*> return (bwaCores .= 4) <*> return x >>= liftIO
+    node "align00" [| \x -> bwaAlign <$> atacOutput <*> bwaIndex <*>
+        return (bwaCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-pe smp 4"
     node "align01" [| \x -> filterBam <$> atacOutput <*> return x
         >>= liftIO

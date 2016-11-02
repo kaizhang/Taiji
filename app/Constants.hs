@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Constants where
 
-import           Scientific.Workflow (ProcState, getConfig')
+import           Scientific.Workflow (ProcState, getConfig', getConfigMaybe')
 
 atacOutput :: ProcState FilePath
 atacOutput = (++ "/ATAC_Seq/") <$> getConfig' "outputDir"
@@ -17,3 +17,9 @@ rnaOutput = (++ "/RNA_Seq/") <$> getConfig' "outputDir"
 
 rankOutput :: ProcState FilePath
 rankOutput = (++ "/Rank/") <$> getConfig' "outputDir"
+
+bwaIndex :: ProcState FilePath
+bwaIndex = (++ "/genome.fa") <$> getConfig' "bwaIndex"
+
+rsemIndex :: ProcState (Maybe FilePath)
+rsemIndex = fmap (++ "/genome") <$> getConfigMaybe' "rsemIndex"

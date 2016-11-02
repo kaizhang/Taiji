@@ -35,7 +35,7 @@ builder = do
     node "rna01" [| \x -> starAlign <$> rnaOutput <*> getConfig' "starIndex" <*>
             return (starCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
-    node "rna02" [| \x -> rsemQuant <$> rnaOutput <*> getConfig' "rsemIndex" <*>
+    node "rna02" [| \x -> rsemQuant <$> rnaOutput <*> fmap fromJust rsemIndex <*>
             return (rsemCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
     node "rna03" [| \x ->

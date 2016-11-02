@@ -42,7 +42,7 @@ mkIndices :: ProcState ()
 mkIndices = do
     fastq <- getConfig' "genome"
 
-    -- generate sequence index
+    -- Generate sequence index
     seqIndex <- getConfig "seqIndex"
     fileExist <- liftIO $ testfile (fromText seqIndex)
     liftIO $ if fileExist
@@ -51,11 +51,10 @@ mkIndices = do
             hPutStrLn stderr "Generating sequence index"
             mkIndex [fastq] $ T.unpack seqIndex
 
-    -- generate BWA index
-    bwaIndex <- getConfig' "bwaIndex"
-    liftIO $ bwaMkIndex fastq bwaIndex
+    -- Generate BWA index
+    bwaIndex >>= (liftIO . bwaMkIndex fastq)
 
-    -- generate STAR index
+    -- Generate STAR index
     starIndex <- getConfigMaybe' "starIndex"
     case starIndex of
         Nothing -> return ()
@@ -65,8 +64,8 @@ mkIndices = do
             return ()
 
     -- generate RSEM index
-    rsemIndex <- getConfigMaybe' "rsemIndex"
-    case rsemIndex of
+    rsemIdx <- rsemIndex
+    case rsemIdx of
         Nothing -> return ()
         Just prefix -> do
             anno <- getConfig' "annotation"
