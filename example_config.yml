@@ -1,5 +1,5 @@
 ################################################################################
-# NOTE: Lines starting with a '#' character are comments.
+# NOTE: Lines starting with a '#' character are comments, for human reading only.
 ################################################################################
 
 # The path to a file specifying the input data sets. The software come with
@@ -20,17 +20,17 @@ picard: "/home/kai/software/picard-tools-1.140/picard.jar"
 # Complete genome in a SINGLE plain FASTA file. Genomes can be downloaded from
 # http://hgdownload.cse.ucsc.edu/downloads.html. For example, this link gives
 # you the complete human genome:
-# http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
+# http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz.
 # Important: Remember to ungzip the file using "gzip -d hg38.fa.gz"!
 # Tip: To make a single genome file from multiple fastq files, execute:
 # `cat chr1.fa chr2.fa chr3.fa > genome.fa`
 genome: "/home/kai/genome/GRCh38/genome.fa"
 
-# Genome annotation in *GTF* format. For human and mouse, Gencode annotations are
-# available at http://www.gencodegenes.org/
-annotation: "/home/kai/genome/GRCh38/Annotation/gencode.v25.annotation.gtf"
+# Genome annotation in *GTF* format. For human and mouse, Gencode annotations
+# are available at http://www.gencodegenes.org/.
+annotation: "/home/kai/genome/GRCh38/gencode.v25.annotation.gtf"
 
-# MEME format file containing motifs. Human and mouse motif files can be
+# MEME format file containing motifs. Human and mouse motif files can be found
 # here: https://github.com/kaizhang/Taiji/tree/master/data/motifs
 motifFile: "/home/kai/motif_databases/cisBP_human.meme"
 

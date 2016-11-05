@@ -1,6 +1,13 @@
-# Each experiment must have a unique ID. Related experiments must share the same
-# group name. For example, you want to use "spleen" as the group name for
-# "spleen_ATAC_Seq" and "spleen_RNA_Seq".
+################################################################################
+# *Important*: Proper identation of the text is critical for parsing!
+# Lines starting with a '#' character are comments, for human reading only.
+# Further read about the YAML format: http://www.yaml.org/start.html.
+################################################################################
+
+# NOTE: Each experiment must have a *UNIQUE* ID.
+# Related experiments must share the same group name.
+# For example, you want to use "spleen" as the group name for
+# "spleen_ATAC_Seq", "spleen_RNA_Seq", etc.
 
 RNA-Seq:
   - id: spleen_RNA
@@ -18,6 +25,7 @@ RNA-Seq:
       - path: RNA-seq/liver-filename-replicate2.fastq.gz
         rep: 2
 
+# ChIP-seq will not be analyzed in beta release
 ChIP-Seq: []
 
 ATAC-Seq:
