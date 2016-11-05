@@ -1,5 +1,5 @@
 name:                Taiji
-version:             0.1.0
+version:             0.1.0-beta4
 synopsis:            An integrated analysis pipeline.
 description:         Please see README.md
 -- homepage:
@@ -55,6 +55,7 @@ executable taiji
     Component.Rank
     Constants
     Types
+    Paths_Taiji
 
 source-repository head
   type:     git
