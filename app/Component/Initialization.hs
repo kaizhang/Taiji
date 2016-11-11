@@ -25,7 +25,7 @@ import           Constants
 
 builder :: Builder ()
 builder = do
-    node "init00" [| \() -> mkAllDirs >> mkIndices >> readData |] $ do
+    node "Initialization" [| \() -> mkAllDirs >> mkIndices >> readData |] $ do
         label .= "Initialization"
         stateful .= True
 

@@ -32,23 +32,23 @@ import           Types
 
 builder :: Builder ()
 builder = do
-    node "ass00" [| \x -> getDomains <$> netOutput <*>
+    node "Get_reg_regions" [| \x -> getDomains <$> netOutput <*>
         getConfig' "annotation" <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    ["peak01"] ~> "ass00"
-    node "ass01" [| \(x,y) -> return $ zip x $ repeat y |] $ do
+    ["ATAC_callpeaks"] ~> "Get_reg_regions"
+    node "Link_TF_gene_prepare" [| \(x,y) -> return $ zip x $ repeat y |] $ do
         label .= "prepare input"
         submitToRemote .= Just False
-    ["ass00", "peak02"] ~> "ass01"
-    node "ass02" [| \xs -> do
+    ["Get_reg_regions", "Find_TF_sites"] ~> "Link_TF_gene_prepare"
+    node "Link_TF_gene" [| \xs -> do
         dir <- netOutput
         liftIO $ mapM (linkGeneToTFs dir) xs
         |] $ batch .= 1 >> stateful .= True
-    node "ass03" [| \xs -> do
+    node "Output_network" [| \xs -> do
         dir <- netOutput
         liftIO $ mapM (printEdgeList dir) xs
         |] $ batch .= 1 >> stateful .= True
-    path ["ass01", "ass02", "ass03"]
+    path ["Link_TF_gene_prepare", "Link_TF_gene", "Output_network"]
 
 getDomains :: FilePath   -- output
            -> FilePath   -- annotation

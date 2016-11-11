@@ -21,15 +21,15 @@ import           Constants
 
 builder :: Builder ()
 builder = do
-    node "peak02" [| \xs -> do
+    node "Find_TF_sites" [| \xs -> do
         let f x = map (^.location) $ filter ((==NarrowPeakFile) . (^.format)) $ x^.files
         scanMotifs <$> (getConfig' "seqIndex") <*> (getConfig' "motifFile") <*>
             return 1e-5 <*> ((++ "/TFBS_open_chromatin_union.bed") <$> tfbsOutput) <*>
             return (concatMap f xs) >>= liftIO
         |] $ stateful .= True
-    ["peak01"] ~> "peak02"
+    ["ATAC_callpeaks"] ~> "Find_TF_sites"
 
-    node "peak03" [| \(es, tfbs) -> do
+    node "Output_TF_sites" [| \(es, tfbs) -> do
         dir <- tfbsOutput
         liftIO $ forM_ es $ \e -> do
             let [fl] = map (^.location) $
@@ -39,4 +39,4 @@ builder = do
             (readBed tfbs :: Source IO BED) =$= intersectBed peaks $$
                 writeBed output
         |] $ stateful .= True
-    ["peak01", "peak02"] ~> "peak03"
+    ["ATAC_callpeaks", "Find_TF_sites"] ~> "Output_TF_sites"

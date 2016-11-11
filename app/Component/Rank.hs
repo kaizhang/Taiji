@@ -37,7 +37,7 @@ import           Types
 
 builder :: Builder ()
 builder = do
-    node "net00" [| \(inputData, x, expr) -> do
+    node "PageRank" [| \(inputData, x, expr) -> do
         liftIO $ do
             gene_expr <- case () of
                 _ | isJust (inputData^._4) -> do
@@ -53,13 +53,13 @@ builder = do
                     hPutStrLn stderr "Running personalized PageRank..."
                     personalizedPageRank (e, x)
         |] $ return ()
-    ["init00", "ass02", "rna03"] ~> "net00"
+    ["Initialization", "Link_TF_gene", "Output_expression"] ~> "PageRank"
 
-    node "vis00" [| \x -> do
+    node "Output_ranks" [| \x -> do
         dir <- rankOutput
         liftIO $ outputData dir x (getMetrics x)
         |] $ submitToRemote .= Just False >> stateful .= True
-    ["net00"] ~> "vis00"
+    ["PageRank"] ~> "Output_ranks"
 
 
 -- | Read RNA expression data

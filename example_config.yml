@@ -37,25 +37,26 @@ motifFile: "/home/kai/motif_databases/cisBP_human.meme"
 
 ################################################################################
 # You don't have to physically provide the following files. But you do need to
-# specify the locations where these files will be generated AUTOMATICALLY IF
-# they are absent. Note the program DO NOT overwrite existing files/directories
-# so that these files can be reused between different runs.
-# If you want to re-generate indices, make sure delete correponding
-# files/directories first.
+# specify the locations where these files will be *GENERATED AUTOMATICALLY WHEN
+# FILES/DIRECTORIES DOES NOT EXIST*. If the specified directories or files
+# already exist, the program will do nothing.
+# If this is the first time you run the program, make sure delete existing
+# files/directories first so indices can be generated properly.
+# You only need to generate the indices once, *THEY CAN BE REUSED*.
 ################################################################################
 
-# Genome sequence index.
+# This is the *FILE* containing GENOME SEQUENCE INDEX.
 seqIndex: "/home/kai/genome/GRCh38/GRCh38.index"
 
-# Directory containing the BWA indices.
+# This is the *DIRECTORY* containing BWA INDICES.
 bwaIndex: "/home/kai/genome/GRCh38/BWAIndex/"
 
 # Uncomment following sections if you want to analyze raw RNA-seq fastq files.
 # NOTE: STAR aligner uses a lot memory.
 # For example, you need at least 30G memory for human genome.
 
-# Directory containing the STAR indices.
+# This is the *DIRECTORY* containing STAR INDICES.
 # starIndex: "/home/kai/genome/GRCh38/STAR_index/"
 
-# Directory containing the RSEM indices
+# This is the *DIRECTORY* containing RSEM INDICES.
 # rsemIndex: "/home/kai/genome/GRCh38/RSEM_index/"

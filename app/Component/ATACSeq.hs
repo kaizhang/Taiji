@@ -17,27 +17,29 @@ import           Constants
 
 builder :: Builder ()
 builder = do
-    node "atac00" [| return . (^._1) |] $ do
+    node "Get_ATAC_data" [| return . (^._1) |] $ do
         submitToRemote .= Just False
         label .= "Get ATAC-seq data"
-    path ["init00", "atac00"]
+    path ["Initialization", "Get_ATAC_data"]
 
-    node "align00" [| \x -> bwaAlign <$> atacOutput <*> bwaIndex <*>
+    node "ATAC_alignment" [| \x -> bwaAlign <$> atacOutput <*> bwaIndex <*>
         return (bwaCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-pe smp 4"
-    node "align01" [| \x -> filterBam <$> atacOutput <*> return x
+    node "ATAC_bam_filtering" [| \x -> filterBam <$> atacOutput <*> return x
         >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "align02" [| \x -> removeDuplicates <$>
+    node "ATAC_remove_dups" [| \x -> removeDuplicates <$>
         getConfig' "picard" <*> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "align03" [| \x -> bam2Bed <$> atacOutput <*> return x >>= liftIO
+    node "ATAC_make_bed" [| \x -> bam2Bed <$> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "align04" [| \x -> mergeReplicatesBed <$> atacOutput <*> return x >>= liftIO
+    node "ATAC_combine_reps" [| \x -> mergeReplicatesBed <$> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "peak00" [| mapM $ \x -> return (x, Nothing) |] $
-        batch .= 1
-    node "peak01" [| \x -> callPeaks <$> atacOutput <*>
+    node "ATAC_callpeaks_prepare" [| mapM $ \x -> return (x, Nothing) |] $
+        submitToRemote .= Just False
+    node "ATAC_callpeaks" [| \x -> callPeaks <$> atacOutput <*>
         return (return ()) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    path ["atac00", "align00", "align01", "align02", "align03", "align04", "peak00", "peak01"]
+    path [ "Get_ATAC_data", "ATAC_alignment", "ATAC_bam_filtering"
+         , "ATAC_remove_dups", "ATAC_make_bed", "ATAC_combine_reps"
+         , "ATAC_callpeaks_prepare", "ATAC_callpeaks" ]

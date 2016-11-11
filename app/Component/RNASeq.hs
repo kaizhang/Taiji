@@ -29,20 +29,22 @@ import           Constants
 
 builder :: Builder ()
 builder = do
-    node "rna00" [| return . (^._3) |] $ do
+    node "Get_RNA_data" [| return . (^._3) |] $ do
         submitToRemote .= Just False
         label .= "Get RNA-seq data"
-    node "rna01" [| \x -> starAlign <$> rnaOutput <*> getConfig' "starIndex" <*>
+    node "RNA_alignment" [| \x -> starAlign <$> rnaOutput <*> getConfig' "starIndex" <*>
             return (starCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
-    node "rna02" [| \x -> rsemQuant <$> rnaOutput <*> fmap fromJust rsemIndex <*>
+    node "RNA_quantification" [| \x ->
+        rsemQuant <$> rnaOutput <*> fmap fromJust rsemIndex <*>
             return (rsemCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
-    node "rna03" [| \x ->
+    node "Output_expression" [| \x ->
         combineExpression <$> fmap (++"/gene_expression.tsv") rnaOutput <*>
             getConfig' "annotation" <*> return x >>= liftIO
         |] $ stateful .= True
-    path ["init00", "rna00", "rna01", "rna02", "rna03"]
+    path [ "Initialization", "Get_RNA_data", "RNA_alignment"
+         , "RNA_quantification", "Output_expression" ]
 
 -- | Combine RNA expression data into a table
 combineExpression :: FilePath
