@@ -22,7 +22,10 @@ import           Constants
 builder :: Builder ()
 builder = do
     node "Find_TF_sites" [| \xs -> do
-        let f x = map (^.location) $ filter ((==NarrowPeakFile) . (^.format)) $ x^.files
+        let f x = x^..replicates.folded.filtered ((==0) . (^.number)).
+                files.folded._Single.filtered ((==NarrowPeakFile) . (^.format)).
+                location
+
         scanMotifs <$> (getConfig' "seqIndex") <*> (getConfig' "motifFile") <*>
             return 1e-5 <*> ((++ "/TFBS_open_chromatin_union.bed") <$> tfbsOutput) <*>
             return (concatMap f xs) >>= liftIO
@@ -32,8 +35,8 @@ builder = do
     node "Output_TF_sites" [| \(es, tfbs) -> do
         dir <- tfbsOutput
         liftIO $ forM_ es $ \e -> do
-            let [fl] = map (^.location) $
-                    filter ((==NarrowPeakFile) . (^.format)) $ e^.files
+            let [fl] = e^..replicates.folded.filtered ((==0) . (^.number)).files.
+                    folded._Single.filtered ((==NarrowPeakFile) . (^.format)).location
                 output = dir ++ "/" ++ T.unpack (e^.eid) ++ "_tfbs.bed"
             peaks <- readBed' fl :: IO [BED3]
             (readBed tfbs :: Source IO BED) =$= intersectBed peaks $$

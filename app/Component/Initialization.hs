@@ -73,9 +73,9 @@ mkIndices = do
             return ()
 
 -- | Read input data information.
-readData ::  ProcState ( [Experiment ATAC_Seq]
-                       , [Experiment ChIP_Seq]
-                       , [Experiment RNA_Seq]
+readData ::  ProcState ( [ATACSeq]
+                       , [ChIPSeq]
+                       , [RNASeq]
                        , Maybe FilePath )
 readData = do
     inputFl <- getConfig' "input"

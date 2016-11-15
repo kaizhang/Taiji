@@ -79,7 +79,7 @@ readExpression fl = do
         | all (<1) xs || all (==head xs) xs = replicate (length xs) (-10)
         | otherwise = U.toList $ scale $ U.fromList xs
 
-pageRank :: [Experiment a] -> IO ([T.Text], [B.ByteString], [[Double]])
+pageRank :: Experiment e => [e] -> IO ([T.Text], [B.ByteString], [[Double]])
 pageRank es = do
     results <- forM es $ \e -> do
         gr <- buildNet e
@@ -92,7 +92,8 @@ pageRank es = do
             in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
     return (expNames, map original genes, transpose ranks)
 
-personalizedPageRank :: (FilePath, [Experiment a])
+personalizedPageRank :: Experiment e
+                     => (FilePath, [e])
                      -> IO ([T.Text], [B.ByteString], [[Double]])
 personalizedPageRank (rnaseq, es) = do
     rnaseqData <- readExpression rnaseq
@@ -113,9 +114,10 @@ personalizedPageRank (rnaseq, es) = do
             in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
     return (expNames, map original genes, transpose ranks)
 
-buildNet :: Experiment a -> IO (LGraph D GeneName ())
+buildNet :: Experiment e => e -> IO (LGraph D GeneName ())
 buildNet e = do
-    let [fl] = filter (\x -> x^.keywords == ["gene-TF assignment"]) $ e^.files
+    let [fl] = e^..replicates.folded.filtered ((==0) . (^.number)).files.folded.
+            _Single.filtered ((==["gene-TF assignment"]) . (^.keywords))
     result <- decodeFile $ fl^.location :: IO [Linkage]
     return $ fromLabeledEdges $ flip concatMap result $ \(a, b) ->
         zip (zip (repeat a) $ fst $ unzip b) $ repeat ()

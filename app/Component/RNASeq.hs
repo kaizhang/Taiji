@@ -21,7 +21,7 @@ import           Data.Double.Conversion.ByteString (toShortest)
 import qualified Data.HashMap.Strict               as M
 import           Data.List
 import           Data.List.Ordered                 (nubSort)
-import           Data.Maybe                        (fromJust)
+import           Data.Maybe                        (fromJust, mapMaybe)
 import qualified Data.Text                         as T
 import           Scientific.Workflow
 
@@ -49,7 +49,7 @@ builder = do
 -- | Combine RNA expression data into a table
 combineExpression :: FilePath
                   -> FilePath   -- ^ annotation in GTF format
-                  -> [Experiment RNA_Seq]
+                  -> [RNASeq]
                   -> IO (Maybe FilePath)
 combineExpression output anno es
     | null es = return Nothing
@@ -57,7 +57,8 @@ combineExpression output anno es
         id2Name <- fmap (M.fromList . map (\x -> (geneId x, original $ geneName x))) $
             readGenes' anno
         dat <- forM es $ \e -> do
-            let fls = filter (elem "gene quantification" . (^.keywords)) $ e^.files
+            let fls = e^..replicates.folded.files.folded._Single.
+                    filtered (elem "gene quantification" . (^.keywords))
             expr <- mapM (readExpr . (^.location)) fls
             return (fromJust $ e^.groupName, map (second average) $ combine expr)
         let (expNames, values) = unzip dat

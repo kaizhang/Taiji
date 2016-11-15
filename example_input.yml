@@ -12,18 +12,19 @@
 RNA-Seq:
   - id: spleen_RNA
     group: spleen
-    target: RNA
-    files:
-      - path: RNA-seq/spleen-filename.fastq.gz
-        rep: 1
+    replicates:
+        - rep: 1
+          files:
+            - path: RNA-seq/spleen-filename.fastq.gz
   - id: liver_RNA
     group: liver
-    target: RNA
-    files:
-      - path: RNA-seq/liver-filename-replicate1.fastq.gz
-        rep: 1
-      - path: RNA-seq/liver-filename-replicate2.fastq.gz
-        rep: 2
+    replicates:
+        - rep: 1
+          files:
+              - path: RNA-seq/liver-filename-replicate1.fastq.gz
+        - rep: 2
+          files:
+              - path: RNA-seq/liver-filename-replicate2.fastq.gz
 
 # ChIP-seq will not be analyzed in beta release
 ChIP-Seq: []
@@ -31,20 +32,25 @@ ChIP-Seq: []
 ATAC-Seq:
   - id: spleen_ATAC
     group: spleen
-    target: ATAC
-    files:
-      - path: ATAC-Seq/spleen-filename-replicate1.fastq.gz
-        rep: 1
-      - path: ATAC-Seq/spleen-filename-replicate2.fastq
-        rep: 2
-      - path: ATAC-Seq/spleen-filename-replicate3.fastq
-        rep: 3
+    replicates:
+        - rep: 1
+          files:
+              - path: ATAC-Seq/spleen-filename-replicate1.fastq.gz
+        - rep: 2
+          files:
+              - path: ATAC-Seq/spleen-filename-replicate2.fastq
+        - rep: 3
+          files:
+              - path: ATAC-Seq/spleen-filename-replicate3.fastq
   - id: liver_ATAC
     group: liver
-    target: ATAC
-    files:
-      - path: ATAC-Seq/liver-filename-replicate1.fastq.gz
-        rep: 1
+    pairEnd: true
+    replicates:
+        - rep: 1
+          files:
+              - pair:
+                  - path: ATAC-Seq/liver-filename-replicate1-forward.fastq.gz
+                  - path: ATAC-Seq/liver-filename-replicate1-reverse.fastq.gz
 
 # Optional expression profile. If provided, the data in this file will be used in
 # the personalized PageRank. RNA-seq data will not be used.
