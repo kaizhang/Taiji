@@ -44,7 +44,7 @@ ATAC-Seq:
               - path: ATAC-Seq/spleen-filename-replicate3.fastq
   - id: liver_ATAC
     group: liver
-    pairEnd: true
+    pairedEnd: true
     replicates:
         - rep: 1
           files:
