@@ -2,32 +2,32 @@
 -- Network construction
 --------------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE GADTs             #-}
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE GADTs #-}
 
 module Component.Network (builder) where
 
 import           Bio.Data.Bed
 import           Bio.Data.Experiment.Types
-import           Bio.Data.Experiment.Utils (mergeExps)
 import           Bio.GO.GREAT
-import           Bio.Pipeline.Instances            ()
-import           Bio.Pipeline.Utils (mapOfFiles)
-import           Bio.Utils.Misc                    (readInt)
+import           Bio.Pipeline.Instances    ()
+import           Bio.Utils.Misc            (readInt)
 import           Conduit
-import           Control.Arrow                     (first, second, (&&&), (***))
+import           Control.Arrow             (first, second, (&&&), (***))
 import           Control.Lens
-import           Data.Binary                       (decodeFile, encodeFile)
-import qualified Data.ByteString.Char8             as B
-import           Data.CaseInsensitive              (mk, original)
-import           Data.Function                     (on)
-import qualified Data.HashMap.Strict               as M
+import           Data.Binary               (decodeFile, encodeFile)
+import qualified Data.ByteString.Char8     as B
+import           Data.CaseInsensitive      (mk, original)
+import           Data.Function             (on)
+import qualified Data.HashMap.Strict       as M
+import qualified Data.IntervalMap.Strict   as IM
 import           Data.List
 import           Data.Maybe
 import           Data.Ord
-import qualified Data.Text                         as T
+import qualified Data.Set                  as S
+import qualified Data.Text                 as T
 import           Scientific.Workflow
 
 import           Constants
@@ -35,17 +35,13 @@ import           Types
 
 builder :: Builder ()
 builder = do
-    node "Get_reg_regions" [| \x -> getDomains <$> netOutput <*>
-        getConfig' "annotation" <*> return x >>= liftIO
-        |] $ batch .= 1 >> stateful .= True
-    ["ATAC_callpeaks"] ~> "Get_reg_regions"
-    node "Link_TF_gene_prepare" [| \(peaks, reg_domains, y) ->
-        return $ zip (mergeExps $ peaks ++ reg_domains) $ repeat y
+    node "Link_TF_gene_prepare" [| \(peaks, y) -> return $ zip peaks $ repeat y
         |] $ label .= "prepare input" >> submitToRemote .= Just False
-    ["ATAC_callpeaks", "Get_reg_regions", "Find_TF_sites"] ~> "Link_TF_gene_prepare"
+    ["ATAC_callpeaks", "Find_TF_sites"] ~> "Link_TF_gene_prepare"
     node "Link_TF_gene" [| \xs -> do
         dir <- netOutput
-        liftIO $ mapM (linkGeneToTFs dir) xs
+        anno <- getConfig' "annotation"
+        liftIO $ mapM (\(e, tfbs) -> linkGeneToTFs dir anno tfbs e) xs
         |] $ batch .= 1 >> stateful .= True
     node "Output_network" [| \xs -> do
         dir <- netOutput
@@ -53,38 +49,30 @@ builder = do
         |] $ batch .= 1 >> stateful .= True
     path ["Link_TF_gene_prepare", "Link_TF_gene", "Output_network"]
 
-getDomains :: FilePath   -- output
-           -> FilePath   -- annotation
-           -> [ATACSeq] -> IO [ATACSeq]
-getDomains dir anno = mapOfFiles fn
-  where
-    fn e r (Single fl) = if r^.number /= 0 || fl^.format /= NarrowPeakFile
-        then return []
-        else do
-            let output = dir ++ "/" ++ T.unpack (e^.eid) ++ "_gene_reg_domains.bed"
-                newFile = Single $ format .~ BedFile $
-                    keywords .~ ["gene regulatory domain"] $
-                    location .~ output $ emptyFile
-            peaks <- readBed' $ fl^.location
-            activePromoters <- gencodeActiveGenes anno peaks
-            writeBed' output $ getGeneDomains GREAT activePromoters
-            return [newFile]
-    fn _ _ _ = return []
 
-linkGeneToTFs :: FilePath -> (ATACSeq, FilePath) -> IO ATACSeq
-linkGeneToTFs dir (e, tfbs) = do
+linkGeneToTFs :: FilePath   -- ^ Output dir
+              -> FilePath   -- ^ Annotation file
+              -> FilePath   -- ^ TFBS
+              -> ATACSeq    -- ^ peaks
+              -> IO ATACSeq
+linkGeneToTFs dir anno tfbs e = do
     let fls = e^..replicates.folded.filtered ((==0) . (^.number)).files.folded._Single
         [peakFl] = filter ((==NarrowPeakFile) . (^.format)) fls
-        [domainFl] = filter ((==["gene regulatory domain"]) . (^.keywords)) fls
-    genes <- readBed' $ domainFl^.location
+
     peaks <- readBed' $ peakFl^.location
 
-    regulators <- findRegulators genes peaks tfbs
+    -- Identify active genes
+    activeGenes <- gencodeActiveGenes anno peaks
+
+    regulators <- readBed tfbs $$ findRegulators activeGenes Nothing peaks
+
     let result :: [Linkage]
-        result = map (second (map ((head *** id) . unzip) . groupBy ((==) `on` fst) .
-            sortBy (comparing fst) . map (getTFName &&& id))) $ M.toList $
-            M.fromListWith (++) $ map (first (mk . fromJust . bedName)) $
-            regulators
+        result = map (second (
+            map ((head *** id) . unzip) .
+            groupBy ((==) `on` fst) .
+            sortBy (comparing fst) .
+            map (getTFName &&& id)
+            )) $ map (first mk) regulators
         output = dir ++ "/" ++ T.unpack (e^.eid) ++ ".assign"
         newFile = Single $ format .~ Other $
                   info .~ [] $
@@ -95,30 +83,46 @@ linkGeneToTFs dir (e, tfbs) = do
   where
     getTFName = mk . head . B.split '+' . fromJust . bedName
 
-findRegulators :: [BED]          -- ^ gene domains
-               -> [NarrowPeak]   -- ^ open chromatin
-               -> FilePath          -- ^ TFBS
-               -> IO [(BED, [BED])]
-findRegulators genes peaks tfbs = do
-    tfbs' <- readBed tfbs =$= intersectBed peaks' $$ sinkList
-    yieldMany genes =$= intersectBedWith id tfbs' =$=
-        filterC (not . null .snd) $$ sinkList
+findRegulators :: Monad m
+               => [((B.ByteString, Int, Bool), B.ByteString)]  -- ^ Genes
+               -> Maybe (Source m (BED3, BED3))  -- ^ 3D contacts
+               -> [NarrowPeak]                   -- ^ Open chromatin
+               -> Sink BED m [(B.ByteString, [BED])]  -- ^ Take a stream of TFBS as the input
+findRegulators genes contacts peaks = do
+    -- Overlap TFBS with open chromatin regions
+    tfbs <- intersectBed peaks' =$= sinkList
+
+    (assign3D, rest) <- case contacts of
+        Just contacts' -> do
+            let tfbsTree = bedToTree (++) $ map (\x -> (x, [x])) tfbs
+            assignments <- lift $ contacts' =$=
+                get3DRegulatoryDomains genes 5000 1000 =$=
+                mapC ( \(bed, gene) ->
+                    (gene, concat $ IM.elems $ intersecting tfbsTree bed) ) $$
+                foldlC (\m (gene, tfs) ->
+                    M.insertWith S.union gene (S.fromList tfs) m) M.empty
+            let assigned = foldl1' S.union $ M.elems assignments
+                unassigned = filter (not . (`S.member` assigned)) tfbs
+            return (assignments, unassigned)
+        Nothing -> return (M.empty, tfbs)
+
+    assign2D <- fmap (M.fromListWith S.union) $ yieldMany regDomains =$=
+        intersectBedWith S.fromList rest =$= filterC (not . null . snd) =$=
+        mapC (first (fromJust . bedName)) $$ sinkList
+
+    return $ M.toList $ fmap S.toList $ M.unionWith S.union assign2D assign3D
   where
+    regDomains = map ( \(b, x) ->
+        BED (chrom b) (chromStart b) (chromEnd b) (Just x) Nothing Nothing ) $
+        getRegulatoryDomains (BasalPlusExtension 5000 1000 1000000) genes
     peaks' = flip map peaks $ \p -> let c = chromStart p + (fromJust . _npPeak) p
-                                    in BED3 (chrom p) (c - 50) (c+ 50)
+                                    in BED3 (chrom p) (c - 50) (c + 50)
 
-data Method = GREAT  -- ^ using GREAT strategy
-
-getGeneDomains :: Method -> [((B.ByteString, Int, Bool), B.ByteString)]
-               -> [BED]   -- ^ genes' regulatory domains. A single gene can
-                          -- potentially have multiple domains.
-getGeneDomains GREAT = map ( \(b, x) ->
-    BED (chrom b) (chromStart b) (chromEnd b) (Just x) Nothing Nothing ) .
-    getRegulatoryDomains (BasalPlusExtension 5000 1000 1000000)
 
 -- | Identify active genes by overlapping their promoters with activity indicators.
-gencodeActiveGenes :: FilePath   -- ^ gencode file in GTF format
-                   -> [BED3]     -- ^ feature that is used to determine the activity
+gencodeActiveGenes :: BEDLike b
+                   => FilePath   -- ^ gencode file in GTF format
+                   -> [b]        -- ^ feature that is used to determine the activity
                                  -- of promoters, e.g., H3K4me3 peaks or ATAC-seq peaks
                    -> IO [((B.ByteString, Int, Bool), B.ByteString)]  -- ^ chr, tss, strand and gene name.
 gencodeActiveGenes input peaks = do

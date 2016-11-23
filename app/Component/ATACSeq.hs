@@ -7,10 +7,12 @@
 
 module Component.ATACSeq (builder) where
 
-import           Bio.Pipeline.NGS
+import           Bio.Data.Experiment.Types
+import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.CallPeaks
-import           Control.Monad.IO.Class    (liftIO)
+import           Bio.Pipeline.NGS
 import           Control.Lens
+import           Control.Monad.IO.Class    (liftIO)
 import           Scientific.Workflow
 
 import           Constants
@@ -22,8 +24,12 @@ builder = do
         label .= "Get ATAC-seq data"
     path ["Initialization", "Get_ATAC_data"]
 
-    node "ATAC_alignment" [| \x -> bwaAlign <$> atacOutput <*> bwaIndex <*>
-        return (bwaCores .= 4) <*> return x >>= liftIO
+    node "ATAC_alignment" [| \x -> do
+        x' <- bwaAlign <$> atacOutput <*> bwaIndex <*> return (bwaCores .= 4) <*>
+            return x >>= liftIO
+        let fn (Single fl) = fl^.format == BamFile
+            fn _ = False
+        return $ filterExpByFile fn $ mergeExps $ x ++ x'
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-pe smp 4"
     node "ATAC_bam_filtering" [| \x -> filterBam <$> atacOutput <*> return x
         >>= liftIO

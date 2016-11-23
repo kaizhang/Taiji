@@ -1,23 +1,25 @@
-resolver: lts-7.8
+resolver: lts-7.10
 
 packages:
     - '.'
 
     - location:
+        git: https://github.com/kaizhang/bioinformatics-toolkit.git
+        commit: af3ec9f893b9829924fbddf4537ecee092ff1b8c
+
+    - location:
         git: https://github.com/kaizhang/bio-experiments.git
-        commit: d4e83a4b1899454694df408ed37fe639409ed018
+        commit: c93702d0ac9191b7599cfb3ff309ed487730ffd3
 
     - location:
         git: https://github.com/kaizhang/bio-pipelines.git
-        commit: fd02dacde9020935e965d6694f6c9fd35d05c919
+        commit: 6dd627f4b05a3e91153f9e24b23a9089951b0aff
 
     - location:
         git: https://github.com/kaizhang/SciFlow.git
         commit: 3b92159a7cd8ad9973e17c22d4f8f8fcf575b054
 
 extra-deps:
-#    - SciFlow-0.5.3.1
-    - bioinformatics-toolkit-0.3.1
     - haskell-igraph-0.2.2
     - hexpat-0.20.9
     - List-0.5.2
