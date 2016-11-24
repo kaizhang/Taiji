@@ -37,23 +37,15 @@ import           Types
 
 builder :: Builder ()
 builder = do
-    node "PageRank" [| \(inputData, x, expr) -> do
-        liftIO $ do
-            gene_expr <- case () of
-                _ | isJust (inputData^._4) -> do
-                        hPutStrLn stderr "Use user supplied gene expression profile."
-                        return $ inputData^._4
-                  | isJust expr -> return expr
-                  | otherwise -> return Nothing
-            case gene_expr of
-                Nothing -> do
-                    hPutStrLn stderr "Running PageRank..."
-                    pageRank x
-                Just e -> do
-                    hPutStrLn stderr "Running personalized PageRank..."
-                    personalizedPageRank (e, x)
+    node "PageRank" [| \(x, gene_expr) -> liftIO $ case gene_expr of
+            Nothing -> do
+                hPutStrLn stderr "Running PageRank..."
+                pageRank x
+            Just e -> do
+                hPutStrLn stderr "Running personalized PageRank..."
+                personalizedPageRank (e, x)
         |] $ return ()
-    ["Initialization", "Link_TF_gene", "Output_expression"] ~> "PageRank"
+    ["Link_TF_gene", "Output_expression"] ~> "PageRank"
 
     node "Output_ranks" [| \x -> do
         dir <- rankOutput

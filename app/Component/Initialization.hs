@@ -7,19 +7,22 @@
 
 module Component.Initialization (builder) where
 
+import           Bio.Data.Experiment.Parser
 import           Bio.Data.Experiment.Types
 import           Bio.Pipeline.NGS
-import           Bio.Seq.IO                (mkIndex)
+import           Bio.Seq.IO                 (mkIndex)
+import           Control.Arrow              (first)
 import           Control.Lens
-import           Control.Monad.IO.Class    (liftIO)
-import           Data.Aeson.Types          (Result (..), Value (..), fromJSON)
-import qualified Data.HashMap.Strict       as M
-import           Data.Maybe                (isNothing)
-import qualified Data.Text                 as T
-import           Data.Yaml                 (Object, decodeFile)
-import           Scientific.Workflow       hiding (Success)
-import           System.IO                 (hPutStrLn, stderr)
-import           Turtle                    (fromText, mktree, testfile)
+import           Control.Monad.IO.Class     (liftIO)
+import           Data.Aeson.Types           (Value (..), parseMaybe)
+import           Data.CaseInsensitive       (CI, mk)
+import qualified Data.HashMap.Strict        as M
+import           Data.Maybe                 (fromMaybe, isNothing)
+import qualified Data.Text                  as T
+import           Data.Yaml                  (Object, decodeFile)
+import           Scientific.Workflow        hiding (Success)
+import           System.IO                  (hPutStrLn, stderr)
+import           Turtle                     (fromText, mktree, testfile)
 
 import           Constants
 
@@ -63,7 +66,7 @@ mkIndices = do
             liftIO $ starMkIndex "STAR" dir [fastq] anno 100
             return ()
 
-    -- generate RSEM index
+    -- Generate RSEM index
     rsemIdx <- rsemIndex
     case rsemIdx of
         Nothing -> return ()
@@ -72,33 +75,28 @@ mkIndices = do
             liftIO $ rsemMkIndex prefix anno [fastq]
             return ()
 
+type InputData = ([ATACSeq], [ChIPSeq], [RNASeq], [HiC])
+
 -- | Read input data information.
-readData ::  ProcState ( [ATACSeq]
-                       , [ChIPSeq]
-                       , [RNASeq]
-                       , Maybe FilePath )
+readData ::  ProcState InputData
 readData = do
     inputFl <- getConfig' "input"
     dat <- liftIO $ readYml inputFl
-    return ( parse $ M.lookup "ATAC-SEQ" dat
-           , parse $ M.lookup "CHIP-SEQ" dat
-           , parse $ M.lookup "RNA-SEQ" dat
-           , case M.lookup "EXPRESSION_PROFILE" dat of
-               Nothing -> Nothing
-               Just (String x) -> Just $ T.unpack x
+    let parse p key obj = fromMaybe [] $
+            M.lookup key obj >>= parseMaybe (parseList p)
+    return ( parse parseATACSeq "ATAC-SEQ" dat
+           , parse parseChIPSeq "CHIP-SEQ" dat
+           , parse parseRNASeq "RNA-SEQ" dat
+           , parse parseHiC "Loops" dat
            )
   where
-    readYml :: FilePath -> IO Object
+    readYml :: FilePath -> IO (M.HashMap (CI T.Text) Value)
     readYml fl = do
         result <- decodeFile fl
         case result of
             Nothing -> error "Unable to read input file. Formatting error!"
-            Just dat -> return $ M.fromList $
-                map (\(k, v) -> (T.toUpper k, v)) $ M.toList dat
-    parse x = case x of
-        Nothing -> []
-        Just x' -> case fromJSON x' of
-            Error msg -> error msg
-            Success r -> if any (isNothing . (^.groupName)) r
-                then error "Missing \"group\" field in the input file"
-                else r
+            Just dat -> return $ M.fromList $ map (first mk) $ M.toList dat
+
+-- | TODO: Make sure the input data has all needed information.
+validateData :: InputData -> Bool
+validateData = undefined

@@ -9,7 +9,7 @@ packages:
 
     - location:
         git: https://github.com/kaizhang/bio-experiments.git
-        commit: c93702d0ac9191b7599cfb3ff309ed487730ffd3
+        commit: 9b3f18eb9aa24accd0a5e583e198ac66fae74612
 
     - location:
         git: https://github.com/kaizhang/bio-pipelines.git
