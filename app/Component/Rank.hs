@@ -109,7 +109,7 @@ personalizedPageRank (rnaseq, es) = do
 buildNet :: Experiment e => e -> IO (LGraph D GeneName ())
 buildNet e = do
     let [fl] = e^..replicates.folded.filtered ((==0) . (^.number)).files.folded.
-            _Single.filtered ((==["gene-TF assignment"]) . (^.keywords))
+            _Single.filtered ((==["gene-TF assignment"]) . (^.tags))
     result <- decodeFile $ fl^.location :: IO [Linkage]
     return $ fromLabeledEdges $ flip concatMap result $ \(a, b) ->
         zip (zip (repeat a) $ fst $ unzip b) $ repeat ()

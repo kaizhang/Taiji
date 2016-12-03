@@ -76,7 +76,7 @@ linkGeneToTFs dir anno tfbs e = do
         output = dir ++ "/" ++ T.unpack (e^.eid) ++ ".assign"
         newFile = Single $ format .~ Other $
                   info .~ [] $
-                  keywords .~ ["gene-TF assignment"] $
+                  tags .~ ["gene-TF assignment"] $
                   location .~ output $ peakFl
     encodeFile output result
     return $ replicates .~ [files .~ [newFile] $ emptyReplicate] $ e
@@ -150,7 +150,7 @@ gencodeActiveGenes input peaks = do
 printEdgeList :: Experiment e => FilePath -> e -> IO ()
 printEdgeList dir e = do
     let [fl] = e^..replicates.folded.filtered ((==0) . (^.number)).files.folded.
-            _Single.filtered ((==["gene-TF assignment"]) . (^.keywords))
+            _Single.filtered ((==["gene-TF assignment"]) . (^.tags))
     result <- decodeFile $ fl^.location :: IO [Linkage]
     let output = dir ++ "/" ++ T.unpack (e^.eid) ++ "_network.tsv"
     B.writeFile output $ B.unlines $ flip map result $ \(a,b) ->

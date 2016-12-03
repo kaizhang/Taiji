@@ -17,9 +17,9 @@ import           Control.Monad.IO.Class     (liftIO)
 import           Data.Aeson.Types           (Value (..), parseMaybe)
 import           Data.CaseInsensitive       (CI, mk)
 import qualified Data.HashMap.Strict        as M
-import           Data.Maybe                 (fromMaybe, isNothing)
+import           Data.Maybe                 (fromMaybe)
 import qualified Data.Text                  as T
-import           Data.Yaml                  (Object, decodeFile)
+import           Data.Yaml                  (decodeFile)
 import           Scientific.Workflow        hiding (Success)
 import           System.IO                  (hPutStrLn, stderr)
 import           Turtle                     (fromText, mktree, testfile)

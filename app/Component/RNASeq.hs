@@ -33,10 +33,10 @@ builder = do
     node "Get_RNA_data" [| return . (^._3) |] $ do
         submitToRemote .= Just False
         label .= "Get RNA-seq data"
-    node "RNA_alignment" [| \x -> starAlign <$> rnaOutput <*> getConfig' "starIndex" <*>
-            return (starCores .= 4) <*> return x >>= liftIO
+    node "RNA_alignment" [| mapM $ \x -> starAlign <$> rnaOutput <*>
+        getConfig' "starIndex" <*> return (starCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
-    node "RNA_quantification" [| \x -> rsemQuant <$> rnaOutput <*>
+    node "RNA_quantification" [| mapM $ \x -> rsemQuant <$> rnaOutput <*>
             fmap fromJust rsemIndex <*> return (rsemCores .= 4) <*>
             return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
@@ -49,7 +49,7 @@ builder = do
     -- Gene expression profile can optionally be provided in original input data.
     node "RNA_average" [| \(originInput, quant) -> do
             let exps = filterExp (const True) f $ mergeExps $ originInput^._3 ++ quant
-                f (Single fl) = fl^.keywords == ["gene quantification"] &&
+                f (Single fl) = fl^.tags == ["gene quantification"] &&
                     fl^.format == Other
                 f _ = False
             forM exps $ \x -> averageExpr <$> rnaOutput <*> return x >>= liftIO
@@ -75,11 +75,11 @@ geneId2Name outdir anno e = do
 
     rs <- forM (e^.replicates) $ \r -> do
         let [fl] = r^..files.folded._Single.
-                filtered (elem "gene quantification" . (^.keywords))
+                filtered (elem "gene quantification" . (^.tags))
             output = outdir ++ "/" ++ T.unpack (e^.eid) ++ "_rep" ++
                 show (r^.number) ++ "_TPM_by_names.tsv"
             newFile = Single $ location .~ output $
-                keywords .~ ["gene quantification"] $ emptyFile
+                tags .~ ["gene quantification"] $ emptyFile
 
         c <- B.readFile $ fl^.location
         B.writeFile output $ B.unlines $ map ( (\xs -> B.intercalate "\t"
@@ -97,10 +97,10 @@ averageExpr :: FilePath   -- ^ Output directory
             -> IO RNASeq
 averageExpr outdir e = do
     let fls = e^..replicates.folded.files.folded._Single.
-            filtered (elem "gene quantification" . (^.keywords))
+            filtered (elem "gene quantification" . (^.tags))
         output = outdir ++ "/" ++ T.unpack (e^.eid) ++ "_average_gene_quant.tsv"
         newFile = Single $ location .~ output $
-            keywords .~ ["average gene quantification"] $ emptyFile
+            tags .~ ["average gene quantification"] $ emptyFile
         readExpr fl = do
             c <- B.readFile fl
             return $ map (\xs -> let [a,b] = B.split '\t' xs in (mk a, readDouble b)) $
@@ -136,7 +136,7 @@ combineExpression output es
         dat <- forM es $ \e -> do
             let [fl] = e^..replicates.folded.filtered ((==0) . (^.number)).
                     files.folded._Single.
-                    filtered (elem "average gene quantification" . (^.keywords))
+                    filtered (elem "average gene quantification" . (^.tags))
             expr <- readExpr $ fl^.location
             return (fromJust $ e^.groupName, expr)
         let (expNames, values) = unzip dat

@@ -9,11 +9,11 @@ packages:
 
     - location:
         git: https://github.com/kaizhang/bio-experiments.git
-        commit: 9b3f18eb9aa24accd0a5e583e198ac66fae74612
+        commit: 3d268c3b0cf0006b5c5ad01240b62ddbeb349bc0
 
     - location:
         git: https://github.com/kaizhang/bio-pipelines.git
-        commit: 6dd627f4b05a3e91153f9e24b23a9089951b0aff
+        commit: 19cc20a377efd315b81d0175cf7c5bbfe2a8d862
 
     - location:
         git: https://github.com/kaizhang/SciFlow.git

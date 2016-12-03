@@ -49,7 +49,7 @@ RNA-Seq:
             # Gene2 <Tab> 20
               - path: RNA-seq/spleen-gene-quant-replicate2.tsv
                 # keywords is required
-                keywords: ["gene quantification"]
+                tags : ["gene quantification"]
   - id: liver_RNA
     group: liver
     pairedEnd: true
