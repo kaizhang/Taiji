@@ -48,7 +48,7 @@ RNA-Seq:
             # Gene1 <Tab> 12
             # Gene2 <Tab> 20
               - path: RNA-seq/spleen-gene-quant-replicate2.tsv
-                # keywords is required
+                # A specific tag is required
                 tags : ["gene quantification"]
   - id: liver_RNA
     group: liver
@@ -61,6 +61,7 @@ RNA-Seq:
                   - path: RNA-Seq/liver-filename-replicate1-forward.fastq.gz
                   - path: RNA-Seq/liver-filename-replicate1-reverse.fastq.gz
 
+HiC: []
 
 # ChIP-seq will not be analyzed in beta release
 ChIP-Seq: []

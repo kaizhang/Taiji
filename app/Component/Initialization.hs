@@ -87,7 +87,7 @@ readData = do
     return ( parse parseATACSeq "ATAC-SEQ" dat
            , parse parseChIPSeq "CHIP-SEQ" dat
            , parse parseRNASeq "RNA-SEQ" dat
-           , parse parseHiC "Loops" dat
+           , parse parseHiC "HIC" dat
            )
   where
     readYml :: FilePath -> IO (M.HashMap (CI T.Text) Value)

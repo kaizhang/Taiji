@@ -35,11 +35,17 @@ import           Types
 
 builder :: Builder ()
 builder = do
-    node "Link_TF_gene_prepare" [| \(peaks, y) -> return $ zip peaks $ repeat y
+    node "Link_TF_gene_prepare" [| \(oriInput, peaks, tfbs) -> do
+        let hic = M.fromList $ map (\x -> (x^.groupName, x)) $ oriInput^._4
+        return $ ContextData tfbs $ flip map peaks $
+            \p -> (p, M.lookup (p^.groupName) hic)
         |] $ label .= "prepare input" >> submitToRemote .= Just False
-    ["ATAC_callpeaks", "Find_TF_sites_merge"] ~> "Link_TF_gene_prepare"
-    node "Link_TF_gene" [| \(e, tfbs) -> linkGeneToTFs <$> netOutput <*>
-        getConfig' "annotation" <*> return tfbs <*> return e >>= liftIO
+    ["Initialization", "ATAC_callpeaks", "Find_TF_sites_merge"] ~>
+        "Link_TF_gene_prepare"
+
+    node "Link_TF_gene" [| \(ContextData tfbs (peak, hic)) ->
+        linkGeneToTFs <$> netOutput <*> getConfig' "annotation" <*>
+            return tfbs <*> return peak <*> return hic >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     node "Output_network" [| \x -> printEdgeList <$> netOutput <*>
         return x >>= liftIO
@@ -51,17 +57,15 @@ linkGeneToTFs :: FilePath   -- ^ Output dir
               -> FilePath   -- ^ Annotation file
               -> FilePath   -- ^ TFBS
               -> ATACSeq    -- ^ peaks
+              -> Maybe HiC        -- ^ 3D interaction
               -> IO ATACSeq
-linkGeneToTFs dir anno tfbs e = do
-    let fls = e^..replicates.folded.filtered ((==0) . (^.number)).files.folded._Single
-        [peakFl] = filter ((==NarrowPeakFile) . (^.format)) fls
-
+linkGeneToTFs dir anno tfbs e hic = do
     peaks <- readBed' $ peakFl^.location
 
     -- Identify active genes
     activeGenes <- gencodeActiveGenes anno peaks
 
-    regulators <- readBed tfbs $$ findRegulators activeGenes Nothing peaks
+    regulators <- runResourceT $ readBed tfbs $$ findRegulators activeGenes loops peaks
 
     let result :: [Linkage]
         result = map (second (
@@ -78,7 +82,14 @@ linkGeneToTFs dir anno tfbs e = do
     encodeFile output result
     return $ replicates .~ [files .~ [newFile] $ emptyReplicate] $ e
   where
+    fls = e^..replicates.folded.filtered ((==0) . (^.number)).files.folded._Single
+    [peakFl] = filter ((==NarrowPeakFile) . (^.format)) fls
     getTFName = mk . head . B.split '+' . fromJust . bedName
+    loops = case hic of
+        Nothing -> Nothing
+        Just x -> let [fl] = x^..replicates.folded.files.folded._Single.
+                        filtered (elem "loops" . (^.tags))
+                  in Just $ read3DContact $ fl^.location
 
 findRegulators :: Monad m
                => [((B.ByteString, Int, Bool), B.ByteString)]  -- ^ Genes
