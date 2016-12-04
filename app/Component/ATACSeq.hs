@@ -28,7 +28,7 @@ builder = do
         return $ concatMap splitExpByFile $ filterExpByFile
             (\x -> formatIs FastqFile x || formatIs FastqGZip x) input
         |] $ submitToRemote .= Just False
-    node "ATAC_alignment" [| mapM $ \x -> bwaAlign <$> atacOutput <*>
+    node "ATAC_alignment" [| \x -> bwaAlign <$> atacOutput <*>
         bwaIndex <*> return (bwaCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-pe smp 4"
     path [ "Get_ATAC_data", "ATAC_alignment_prepare", "ATAC_alignment"]
@@ -39,10 +39,10 @@ builder = do
                 oriInput
         return $ filtInput ++ input
         |] $ submitToRemote .= Just False
-    node "ATAC_bam_filt" [| mapM $ \x -> filterBam <$> atacOutput <*>
+    node "ATAC_bam_filt" [| \x -> filterBam <$> atacOutput <*>
         return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "ATAC_remove_dups" [| mapM $ \x -> removeDuplicates <$>
+    node "ATAC_remove_dups" [| \x -> removeDuplicates <$>
         getConfig' "picard" <*> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     [ "Get_ATAC_data", "ATAC_alignment"] ~> "ATAC_bam_filt_prepare"
@@ -56,18 +56,18 @@ builder = do
         |] $ submitToRemote .= Just False
     [ "Get_ATAC_data", "ATAC_remove_dups"] ~> "ATAC_makeBED_prepare"
 
-    node "ATAC_makeBED" [| mapM $ \x -> bam2Bed <$> atacOutput <*> return x >>= liftIO
+    node "ATAC_makeBED" [| \x -> bam2Bed <$> atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
 
     node "ATAC_combine_reps_prepare" [| return . mergeExps |] $
         submitToRemote .= Just False
-    node "ATAC_combine_reps" [| mapM $ \x -> mergeReplicatesBed <$>
+    node "ATAC_combine_reps" [| \x -> mergeReplicatesBed <$>
         atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
 
     node "ATAC_callpeaks_prepare" [| mapM $ \x -> return (x, Nothing) |] $
         submitToRemote .= Just False
-    node "ATAC_callpeaks" [| mapM $ \x -> callPeaks <$> atacOutput <*>
+    node "ATAC_callpeaks" [| \x -> callPeaks <$> atacOutput <*>
         return (return ()) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
 

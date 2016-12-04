@@ -37,15 +37,12 @@ builder :: Builder ()
 builder = do
     node "Link_TF_gene_prepare" [| \(peaks, y) -> return $ zip peaks $ repeat y
         |] $ label .= "prepare input" >> submitToRemote .= Just False
-    ["ATAC_callpeaks", "Find_TF_sites"] ~> "Link_TF_gene_prepare"
-    node "Link_TF_gene" [| \xs -> do
-        dir <- netOutput
-        anno <- getConfig' "annotation"
-        liftIO $ mapM (\(e, tfbs) -> linkGeneToTFs dir anno tfbs e) xs
+    ["ATAC_callpeaks", "Find_TF_sites_merge"] ~> "Link_TF_gene_prepare"
+    node "Link_TF_gene" [| \(e, tfbs) -> linkGeneToTFs <$> netOutput <*>
+        getConfig' "annotation" <*> return tfbs <*> return e >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    node "Output_network" [| \xs -> do
-        dir <- netOutput
-        liftIO $ mapM (printEdgeList dir) xs
+    node "Output_network" [| \x -> printEdgeList <$> netOutput <*>
+        return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     path ["Link_TF_gene_prepare", "Link_TF_gene", "Output_network"]
 

@@ -13,11 +13,11 @@ packages:
 
     - location:
         git: https://github.com/kaizhang/bio-pipelines.git
-        commit: 19cc20a377efd315b81d0175cf7c5bbfe2a8d862
+        commit: 01d16df0d36b7319f73d102ba40cf2418071b6a1
 
     - location:
         git: https://github.com/kaizhang/SciFlow.git
-        commit: 3b92159a7cd8ad9973e17c22d4f8f8fcf575b054
+        commit: f5c827f36cc558d18e234cc100144b4c27312747
 
 extra-deps:
     - haskell-igraph-0.2.2
@@ -25,3 +25,4 @@ extra-deps:
     - List-0.5.2
     - drmaa-0.1.1
     - HsHTSLib-1.3.2.0
+    - matrices-0.4.4

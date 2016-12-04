@@ -10,14 +10,14 @@ import           Scientific.Workflow.Main (MainOpts (..), defaultMainOpts,
                                            mainWith)
 import           Text.Printf              (printf)
 
-import qualified Component.ATACSeq        as ATACSeq
 import qualified Component.Initialization as Initialization
-import qualified Component.Network        as Network
-import qualified Component.Rank           as Rank
+import qualified Component.ATACSeq        as ATACSeq
 import qualified Component.RNASeq         as RNASeq
 import qualified Component.TFBS           as TFBS
+import qualified Component.Network        as Network
+import qualified Component.Rank           as Rank
 
 mainWith defaultMainOpts
     { programHeader = printf "Taiji-v%s" (showVersion version)
-    } $ Initialization.builder >> ATACSeq.builder >> Network.builder >>
-        RNASeq.builder >> TFBS.builder >> Rank.builder
+    } $ Initialization.builder >> ATACSeq.builder >> RNASeq.builder >>
+        TFBS.builder >> Network.builder >> Rank.builder

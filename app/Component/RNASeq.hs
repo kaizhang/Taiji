@@ -8,7 +8,7 @@
 module Component.RNASeq (builder) where
 
 import           Bio.Data.Experiment.Types
-import           Bio.Data.Experiment.Utils         (filterExp, mergeExps)
+import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.NGS
 import           Bio.RealWorld.GENCODE
 import           Bio.Utils.Misc                    (readDouble)
@@ -33,33 +33,37 @@ builder = do
     node "Get_RNA_data" [| return . (^._3) |] $ do
         submitToRemote .= Just False
         label .= "Get RNA-seq data"
-    node "RNA_alignment" [| mapM $ \x -> starAlign <$> rnaOutput <*>
+    node "RNA_alignment_prepare" [| \input ->
+        return $ concatMap splitExpByFile $ filterExpByFile
+            (\x -> formatIs FastqFile x || formatIs FastqGZip x) input
+        |] $ submitToRemote .= Just False
+    node "RNA_alignment" [| \x -> starAlign <$> rnaOutput <*>
         getConfig' "starIndex" <*> return (starCores .= 4) <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
-    node "RNA_quantification" [| mapM $ \x -> rsemQuant <$> rnaOutput <*>
+    node "RNA_quantification" [| \x -> rsemQuant <$> rnaOutput <*>
             fmap fromJust rsemIndex <*> return (rsemCores .= 4) <*>
             return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True >> remoteParam .= "-l vmem=10G -pe smp 4"
-    node "RNA_convert_ID_to_name" [| mapM $ \x -> geneId2Name <$> rnaOutput <*>
+    node "RNA_convert_ID_to_name" [| \x -> geneId2Name <$> rnaOutput <*>
             getConfig' "annotation" <*> return x >>= liftIO
         |] $ batch .= 5 >> stateful .= True
-    path [ "Initialization", "Get_RNA_data", "RNA_alignment"
+    path [ "Initialization", "Get_RNA_data", "RNA_alignment_prepare", "RNA_alignment"
          , "RNA_quantification", "RNA_convert_ID_to_name"]
 
     -- Gene expression profile can optionally be provided in original input data.
-    node "RNA_average" [| \(originInput, quant) -> do
-            let exps = filterExp (const True) f $ mergeExps $ originInput^._3 ++ quant
-                f (Single fl) = fl^.tags == ["gene quantification"] &&
-                    fl^.format == Other
-                f _ = False
-            forM exps $ \x -> averageExpr <$> rnaOutput <*> return x >>= liftIO
+    node "RNA_average_prepare" [| \(oriInput, quant) -> do
+        let filt (Single fl) = "gene quantification" `elem` fl^.tags
+            filt _ = False
+        return $ mergeExps $ filterExpByFile filt oriInput ++ quant
+        |] $ submitToRemote .= Just False
+    node "RNA_average" [| \x -> averageExpr <$> rnaOutput <*>
+        return x >>= liftIO
         |] $ batch .= 5 >> stateful .= True
-    ["Initialization", "RNA_convert_ID_to_name"] ~> "RNA_average"
-
     node "Output_expression" [| \x -> combineExpression <$>
             fmap (++"/gene_expression.tsv") rnaOutput <*> return x >>= liftIO
         |] $ stateful .= True
-    ["RNA_average"] ~> "Output_expression"
+    ["Get_RNA_data", "RNA_convert_ID_to_name"] ~> "RNA_average_prepare"
+    path ["RNA_average_prepare", "RNA_average", "Output_expression"]
 
 
 -- | Retrieve gene names

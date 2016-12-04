@@ -38,8 +38,9 @@ executable taiji
     , IntervalMap
     , lens
     , mtl
-    , SciFlow >=0.5.3
+    , SciFlow >=0.5.4
     , statistics
+    , split
     , turtle
     , text
     , unordered-containers
