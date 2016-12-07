@@ -17,17 +17,23 @@ picard: "/home/kai/software/picard-tools-1.140/picard.jar"
 # Genome Indices
 ################################################################################
 
-# Complete genome in a SINGLE plain FASTA file. Genomes can be downloaded from
-# http://hgdownload.cse.ucsc.edu/downloads.html. For example, this link gives
-# you the complete human genome:
+# Complete genome in a SINGLE plain FASTA file. Genome can be downloaded from
+# Gencode (human and mouse), UCSC or ENSEMBL.
+# Example link for human:
 # http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz.
-# Important: Remember to ungzip the file using "gzip -d hg38.fa.gz"!
+# *Important*: Remember to ungzip the file using "gzip -d hg38.fa.gz"!
 # Tip: To make a single genome file from multiple fastq files, execute:
 # `cat chr1.fa chr2.fa chr3.fa > genome.fa`
 genome: "/home/kai/genome/GRCh38/genome.fa"
 
 # Genome annotation in *GTF* format. For human and mouse, Gencode annotations
 # are available at http://www.gencodegenes.org/.
+# *Very important*: chromosome names in the annotations GTF file have to match
+# chromosome names in the FASTA genome sequence file. For example, one can use
+# ENSEMBL FASTA files with ENSEMBL GTF files, and UCSC FASTA files with UCSC
+# FASTA files. However, since UCSC uses chr1, chr2,... naming convention,
+# and ENSEMBL uses 1, 2, ... naming, the ENSEMBL and UCSC FASTA and GTF files
+# cannot be mixed together.
 annotation: "/home/kai/genome/GRCh38/gencode.v25.annotation.gtf"
 
 # MEME format file containing motifs. Human and mouse motif files can be found
