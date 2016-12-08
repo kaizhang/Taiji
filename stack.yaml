@@ -2,7 +2,6 @@ resolver: nightly-2016-12-06
 
 packages:
     - '.'
-    - '../SciFlow'
 
     - location:
         git: https://github.com/kaizhang/bioinformatics-toolkit.git
@@ -14,11 +13,11 @@ packages:
 
     - location:
         git: https://github.com/kaizhang/bio-pipelines.git
-        commit: 360c0f95430b19e8e5415d78c9c0282283ac787f
+        commit: 72d3e75b12b113ca7cd811e9744a5a46da535265
 
-#    - location:
-#        git: https://github.com/kaizhang/SciFlow.git
-#        commit: f5c827f36cc558d18e234cc100144b4c27312747
+    - location:
+        git: https://github.com/kaizhang/SciFlow.git
+        commit: 47d01ab509075c83159c8b9764253546c10754be
 
 extra-deps:
     - haskell-igraph-0.2.2
