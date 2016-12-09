@@ -11,8 +11,10 @@ import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.CallPeaks
 import           Bio.Pipeline.NGS
+import           Bio.Pipeline.Utils (mapOfFiles)
 import           Control.Lens
 import           Control.Monad.IO.Class    (liftIO)
+import           Data.Maybe                (catMaybes)
 import qualified Data.Text                 as T
 import           Scientific.Workflow
 
@@ -49,30 +51,54 @@ builder = do
     [ "Get_ATAC_data", "ATAC_alignment"] ~> "ATAC_bam_filt_prepare"
     path ["ATAC_bam_filt_prepare", "ATAC_bam_filt", "ATAC_remove_dups"]
 
-    node "ATAC_callpeaks_prepare" [| \(oriInput, input) -> do
-        let filtInput = filterExpByFile
+    node "ATAC_makeBED_prepare" [| \(oriInput, input) -> do
+        let filtInput = concatMap splitExpByFile $ filterExpByFile
                 (\x -> formatIs BamFile x && "filtered" `elem` x^._Single.tags)
                 oriInput
-        return $ mergeExps $ filtInput ++ input
+        return $ filtInput ++ input
         |] $ submitToRemote .= Just False
-    [ "Get_ATAC_data", "ATAC_remove_dups"] ~> "ATAC_callpeaks_prepare"
-
-{-
-    node "ATAC_makeBED" [| \x -> bam2Bed <$> atacOutput <*> return x >>= liftIO
+    node "ATAC_makeBED" [| \e -> do
+        prefix <- atacOutput
+        let processWith f = replicates.traverse %%~
+                id files (fmap catMaybes . mapM (f prefix)) $ e
+        liftIO $ if pairedEnd e
+            then processWith sortedBam2BedPE
+            else processWith bam2Bed
         |] $ batch .= 1 >> stateful .= True
     node "ATAC_combine_reps_prepare" [| return . mergeExps |] $
         submitToRemote .= Just False
     node "ATAC_combine_reps" [| \x -> mergeReplicatesBed <$>
         atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-        -}
+    [ "Get_ATAC_data", "ATAC_remove_dups"] ~> "ATAC_makeBED_prepare"
+    path [ "ATAC_makeBED_prepare", "ATAC_makeBED", "ATAC_combine_reps_prepare"
+         , "ATAC_combine_reps" ]
 
-    node "ATAC_callpeaks" [| \e -> do
+    node "ATAC_callpeaks_prepare" [| \(input1, input2) -> return $
+        concatMap splitExpByFile $ filterExpByFile (formatIs BedGZip) $
+        mergeExps $ input1 ++ input2
+        |] $ submitToRemote .= Just False
+    node "ATAC_callpeaks" [| mapOfFiles $ \e r fl -> do
         dir <- atacOutput
-        let input = e^..replicates.folded.files.folded.filtered (formatIs BamFile)
-            output = dir ++ "/" ++ T.unpack (e^.eid) ++ "_rep0.NarrowPeak"
-        fl <- liftIO $ callPeaks output input [] (pair .= pairedEnd e)
-        return $ replicates .~ [files .~ [fl] $ emptyReplicate] $ e
+        if formatIs BedGZip fl || formatIs BedFile fl
+            then do
+                let output = printf "%s/%s_rep%d.NarrowPeak" dir
+                        (T.unpack $ e^.eid) (r^.number)
+                result <- liftIO $ callPeaks output fl Nothing
+                    (pair .= pairedEnd e >> qValue .= 0.005)
+                return [result]
+            else return []
         |] $ batch .= 1 >> stateful .= True
-
-    path [ "ATAC_callpeaks_prepare", "ATAC_callpeaks" ]
+    node "ATAC_IDR_prepare" [| return . mergeExps |] $ submitToRemote .= Just False
+    node "ATAC_IDR" [| \e -> do
+        dir <- atacOutput
+        let [merged] = e^..replicates.folded.filtered (\r -> r^.number == 0)
+                .files.folded.filtered (formatIs NarrowPeakFile)
+            peakFiles = e^..replicates.folded.filtered (\r -> r^.number /= 0)
+                .files.folded.filtered (formatIs NarrowPeakFile)
+            output = printf "%s/%s_idr_0.05.NarrowPeak" dir (T.unpack $ e^.eid)
+        r <- liftIO $ idrMultiple peakFiles merged 0.05 output
+        return $ replicates .~ [files .~ [r] $ emptyReplicate] $ e
+        |] $ batch .= 1 >> stateful .= True
+    ["ATAC_combine_reps_prepare", "ATAC_combine_reps"] ~> "ATAC_callpeaks_prepare"
+    path ["ATAC_callpeaks_prepare", "ATAC_callpeaks", "ATAC_IDR_prepare", "ATAC_IDR"]

@@ -2,18 +2,19 @@ resolver: nightly-2016-12-06
 
 packages:
     - '.'
+    - '../bio-pipelines'
 
     - location:
         git: https://github.com/kaizhang/bioinformatics-toolkit.git
-        commit: af3ec9f893b9829924fbddf4537ecee092ff1b8c
+        commit: 5a488832a6c6b66f5a97f85b07babb319648a2b0
 
     - location:
         git: https://github.com/kaizhang/bio-experiments.git
         commit: 3d268c3b0cf0006b5c5ad01240b62ddbeb349bc0
 
-    - location:
-        git: https://github.com/kaizhang/bio-pipelines.git
-        commit: 72d3e75b12b113ca7cd811e9744a5a46da535265
+#    - location:
+#        git: https://github.com/kaizhang/bio-pipelines.git
+#        commit: 58b321f4ef41a52c9437e824c3ee1364b84cb0ba
 
     - location:
         git: https://github.com/kaizhang/SciFlow.git
