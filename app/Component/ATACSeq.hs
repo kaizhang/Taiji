@@ -64,14 +64,19 @@ builder = do
             then processWith sortedBam2BedPE
             else processWith bam2Bed
         |] $ batch .= 1 >> stateful .= True
-    node "ATAC_combine_reps_prepare" [| return . mergeExps |] $
-        submitToRemote .= Just False
+    ["Get_ATAC_data", "ATAC_remove_dups"] ~> "ATAC_makeBED_prepare"
+    path [ "ATAC_makeBED_prepare", "ATAC_makeBED"]
+
+    node "ATAC_combine_reps_prepare" [| \(oriInput, es) -> do
+        let filtInput = filterExpByFile
+                (\x -> formatIs BedGZip x || formatIs BedFile x) oriInput
+        return $ mergeExps $ es ++ filtInput
+        |] $ submitToRemote .= Just False
     node "ATAC_combine_reps" [| \x -> mergeReplicatesBed <$>
         atacOutput <*> return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
-    [ "Get_ATAC_data", "ATAC_remove_dups"] ~> "ATAC_makeBED_prepare"
-    path [ "ATAC_makeBED_prepare", "ATAC_makeBED", "ATAC_combine_reps_prepare"
-         , "ATAC_combine_reps" ]
+    ["Get_ATAC_data", "ATAC_makeBED"] ~> "ATAC_combine_reps_prepare"
+    path ["ATAC_combine_reps_prepare", "ATAC_combine_reps"]
 
     node "ATAC_callpeaks_prepare" [| \(input1, input2) -> return $
         concatMap splitExpByFile $ filterExpByFile (formatIs BedGZip) $

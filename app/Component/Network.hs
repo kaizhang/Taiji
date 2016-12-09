@@ -57,7 +57,7 @@ builder = do
         let hic = M.fromList $ map (\x -> (x^.groupName, x)) $ oriInput^._4
         return $ ContextData tfbs $ flip map peaks $ \p ->
             (p, M.lookup (p^.groupName) hic, fromJust $ lookup (p^.eid) promoters)
-        |] $ label .= "prepare input" >> submitToRemote .= Just False
+        |] $ submitToRemote .= Just False
     [ "ATAC_find_active_promoter", "Initialization", "ATAC_callpeaks"
         , "Find_TF_sites_merge" ] ~> "Link_TF_gene_prepare"
 

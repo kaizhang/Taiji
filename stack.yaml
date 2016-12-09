@@ -13,7 +13,7 @@ packages:
 
     - location:
         git: https://github.com/kaizhang/bio-pipelines.git
-        commit: 038c080e87c2f17cc2387c8afa41c4d22a2fc498
+        commit: 4339f3dffa58498077e9a6a06e191d6bee8f7751
 
     - location:
         git: https://github.com/kaizhang/SciFlow.git
