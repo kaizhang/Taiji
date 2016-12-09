@@ -13,13 +13,14 @@ import           Bio.Pipeline.Instances            ()
 import           Bio.Utils.Functions               (scale)
 import           Bio.Utils.Misc                    (readDouble)
 import           Conduit
-import           Control.Lens
+import           Control.Lens                      hiding (pre)
 import           Control.Monad
 import           Data.Binary                       (decodeFile)
 import qualified Data.ByteString.Char8             as B
 import           Data.CaseInsensitive              (mk, original)
 import           Data.Double.Conversion.ByteString (toShortest)
 import qualified Data.HashMap.Strict               as M
+import qualified Data.HashSet                      as S
 import           Data.List
 import           Data.List.Ordered                 (nubSort)
 import           Data.Maybe
@@ -75,8 +76,11 @@ pageRank :: Experiment e => [e] -> IO ([T.Text], [B.ByteString], [[Double]])
 pageRank es = do
     results <- forM es $ \e -> do
         gr <- buildNet e
-        let labs = map (nodeLab gr) $ nodes gr
-        return $ zip labs $ pagerank gr Nothing 0.85
+        let tfs = S.fromList $ filter (not . null . pre gr) $ nodes gr
+        return $ flip mapMaybe (zip [0..] $ pagerank gr Nothing 0.85) $ \(i, rank) ->
+            if i `S.member` tfs
+                then Just (nodeLab gr i, rank)
+                else Nothing
     let genes = nubSort $ concatMap (fst . unzip) results
         expNames = map (fromJust . (^.groupName)) es
         ranks = flip map results $ \xs ->
@@ -97,8 +101,13 @@ personalizedPageRank (rnaseq, es) = do
             nodeWeights = map (exp . snd . lookupExpr) labs
             edgeWeights = map (sqrt . fst . lookupExpr . nodeLab gr . snd) $ edges gr
             labs = map (nodeLab gr) $ nodes gr
-        return $ zip labs $
-            personalizedPagerank gr nodeWeights (Just edgeWeights) 0.85
+            tfs = S.fromList $ filter (not . null . pre gr) $ nodes gr
+            ranks = personalizedPagerank gr nodeWeights (Just edgeWeights) 0.85
+        return $ flip mapMaybe (zip [0..] ranks) $ \(i, rank) ->
+            if i `S.member` tfs
+                then Just (nodeLab gr i, rank)
+                else Nothing
+
     let genes = nubSort $ concatMap (fst . unzip) results
         expNames = map (fromJust . (^.groupName)) es
         ranks = flip map results $ \xs ->
