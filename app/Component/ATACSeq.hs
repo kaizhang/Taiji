@@ -82,10 +82,10 @@ builder = do
         dir <- atacOutput
         if formatIs BedGZip fl || formatIs BedFile fl
             then do
-                let output = printf "%s/%s_rep%d.NarrowPeak" dir
+                let output = printf "%s/%s_rep%d_p_0.01.narrowPeak" dir
                         (T.unpack $ e^.eid) (r^.number)
-                result <- liftIO $ callPeaks output fl Nothing
-                    (pair .= pairedEnd e >> qValue .= 0.005)
+                result <- liftIO $ callPeaks output fl Nothing $
+                    pair .= pairedEnd e >> cutoff .= PValue 0.01
                 return [result]
             else return []
         |] $ batch .= 1 >> stateful .= True
@@ -96,7 +96,7 @@ builder = do
                 .files.folded.filtered (formatIs NarrowPeakFile)
             peakFiles = e^..replicates.folded.filtered (\r -> r^.number /= 0)
                 .files.folded.filtered (formatIs NarrowPeakFile)
-            output = printf "%s/%s_idr_0.05.NarrowPeak" dir (T.unpack $ e^.eid)
+            output = printf "%s/%s_idr_0.05.narrowPeak" dir (T.unpack $ e^.eid)
         r <- liftIO $ idrMultiple peakFiles merged 0.05 output
         return $ replicates .~ [files .~ [r] $ emptyReplicate] $ e
         |] $ batch .= 1 >> stateful .= True
