@@ -45,7 +45,7 @@ executable taiji
     , SciFlow >=0.5.4
     , statistics
     , split
-    , turtle
+    , shelly
     , text
     , unordered-containers
     , vector
@@ -54,6 +54,7 @@ executable taiji
   default-language:    Haskell2010
 
   if flag(idr)
+    CPP-Options: -DIDR_PEAK_CALLER
     other-modules: Component.ATACSeq.CallPeak.IDR
   else
     other-modules: Component.ATACSeq.CallPeak.MACS2

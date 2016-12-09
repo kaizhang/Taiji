@@ -21,8 +21,8 @@ import           Data.Maybe                 (fromMaybe)
 import qualified Data.Text                  as T
 import           Data.Yaml                  (decodeFile)
 import           Scientific.Workflow        hiding (Success)
+import           Shelly                     (fromText, mkdir_p, shelly, test_f)
 import           System.IO                  (hPutStrLn, stderr)
-import           Turtle                     (fromText, mktree, testfile)
 
 import           Constants
 
@@ -38,7 +38,7 @@ mkAllDirs :: ProcState ()
 mkAllDirs = mkdir atacOutput >> mkdir netOutput >> mkdir tfbsOutput >>
     mkdir rnaOutput >> mkdir rankOutput
   where
-    mkdir x = x >>= liftIO . mktree . fromText . T.pack
+    mkdir x = x >>= liftIO . shelly . mkdir_p . fromText . T.pack
 
 -- | Generate a variety of genome indices when they are absent.
 mkIndices :: ProcState ()
@@ -47,7 +47,7 @@ mkIndices = do
 
     -- Generate sequence index
     seqIndex <- getConfig "seqIndex"
-    fileExist <- liftIO $ testfile (fromText seqIndex)
+    fileExist <- liftIO $ shelly $ test_f (fromText seqIndex)
     liftIO $ if fileExist
         then hPutStrLn stderr "Sequence index exists. Skipped."
         else do

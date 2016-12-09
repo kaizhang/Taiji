@@ -9,22 +9,19 @@ import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.CallPeaks
 import           Bio.Pipeline.NGS
-import           Bio.Pipeline.Utils (mapOfFiles)
+import           Bio.Pipeline.Utils        (mapOfFiles)
 import           Control.Lens
 import           Control.Monad.IO.Class    (liftIO)
 import           Data.Maybe                (catMaybes)
 import qualified Data.Text                 as T
 import           Scientific.Workflow
+import           Shelly                    (fromText, mkdir_p, shelly)
 
 import           Constants
 
 
 builder :: Builder ()
 builder = do
-    node "ATAC_callpeaks_prepare" [| \(input1, input2) -> return $
-        concatMap splitExpByFile $ filterExpByFile (formatIs BedGZip) $
-        mergeExps $ input1 ++ input2
-        |] $ submitToRemote .= Just False
     node "ATAC_IDR_call_relaxed_peaks" [| mapOfFiles $ \e r fl -> do
         dir <- fmap (++"/Peaks_Relax/") atacOutput
         shelly $ mkdir_p $ fromText $ T.pack dir

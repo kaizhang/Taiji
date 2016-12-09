@@ -19,7 +19,7 @@ import           Data.Default
 import           Data.List.Split           (chunksOf)
 import qualified Data.Text                 as T
 import           Scientific.Workflow
-import           Turtle                    (fromText, rm)
+import           Shelly                    (fromText, rm, shelly)
 
 import           Constants
 
@@ -50,8 +50,9 @@ builder = do
         |] $ stateful .= True >> batch .= 1
     node "Find_TF_sites_merge" [| \xs -> do
         output <- (++ "/TFBS_open_chromatin_union.bed") <$> tfbsOutput
-        liftIO $ runResourceT $ mapM_ sourceFileBS xs $$ sinkFile output
-        mapM_ (liftIO . rm . fromText . T.pack) xs
+        liftIO $ do
+            runResourceT $ mapM_ sourceFileBS xs $$ sinkFile output
+            shelly $ mapM_ (rm . fromText . T.pack) xs
         return output
         |] $ stateful .= True >> submitToRemote .= Just False
     path [ "ATAC_callpeaks", "Find_TF_sites_prepare", "Find_TF_sites"

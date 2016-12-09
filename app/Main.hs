@@ -14,7 +14,7 @@ import           Text.Printf              (printf)
 import qualified Component.Initialization as Initialization
 import qualified Component.ATACSeq        as ATACSeq
 
-#ifdef IDR
+#ifdef IDR_PEAK_CALLER
 import qualified Component.ATACSeq.CallPeak.IDR  as CallPeak
 #else
 import qualified Component.ATACSeq.CallPeak.MACS2 as CallPeak
