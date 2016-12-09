@@ -47,6 +47,7 @@ executable taiji
     , split
     , shelly
     , text
+    , temporary
     , unordered-containers
     , vector
     , yaml

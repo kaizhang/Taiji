@@ -11,8 +11,10 @@ module Component.Network (builder) where
 
 import           Bio.Data.Bed
 import           Bio.Data.Experiment.Types
+import           Bio.Data.Experiment.Utils
 import           Bio.GO.GREAT
 import           Bio.Pipeline.Instances    ()
+import           Bio.Pipeline.CallPeaks
 import           Bio.Utils.Misc            (readInt)
 import           Conduit
 import           Control.Arrow             (first, second, (&&&), (***))
@@ -29,44 +31,54 @@ import           Data.Ord
 import qualified Data.Set                  as S
 import qualified Data.Text                 as T
 import           Scientific.Workflow
+import System.IO.Temp (withTempFile)
 
 import           Constants
 import           Types
 
 builder :: Builder ()
 builder = do
-    node "Link_TF_gene_prepare" [| \(oriInput, peaks, tfbs) -> do
-        let hic = M.fromList $ map (\x -> (x^.groupName, x)) $ oriInput^._4
-        return $ ContextData tfbs $ flip map peaks $
-            \p -> (p, M.lookup (p^.groupName) hic)
-        |] $ label .= "prepare input" >> submitToRemote .= Just False
-    ["Initialization", "ATAC_callpeaks", "Find_TF_sites_merge"] ~>
-        "Link_TF_gene_prepare"
+    node "ATAC_find_active_promoter" [| \e -> do
+        anno <- getConfig' "annotation"
+        liftIO $ withTempFile "./" "tmp_macs2_file." $ \tmp _ -> do
+            let [peakFl] = e^..replicates.folded
+                    .filtered ((==0) . (^.number)).files.folded
+                    .filtered (\fl -> formatIs BedGZip fl || formatIs BedFile fl)
 
-    node "Link_TF_gene" [| \(ContextData tfbs (peak, hic)) ->
-        linkGeneToTFs <$> netOutput <*> getConfig' "annotation" <*>
-            return tfbs <*> return peak <*> return hic >>= liftIO
+            _ <- callPeaks tmp peakFl Nothing $
+                pair .= pairedEnd e >> cutoff .= QValue 0.1
+            peaks <- readBed' tmp :: IO [BED3]
+            genes <- gencodeActiveGenes anno peaks
+            return (e^.eid, genes)
+        |] $ batch .= 1 >> stateful .= True
+    path ["ATAC_combine_reps", "ATAC_find_active_promoter"]
+
+    node "Link_TF_gene_prepare" [| \(promoters, oriInput, peaks, tfbs) -> do
+        let hic = M.fromList $ map (\x -> (x^.groupName, x)) $ oriInput^._4
+        return $ ContextData tfbs $ flip map peaks $ \p ->
+            (p, M.lookup (p^.groupName) hic, fromJust $ lookup (p^.eid) promoters)
+        |] $ label .= "prepare input" >> submitToRemote .= Just False
+    [ "ATAC_find_active_promoter", "Initialization", "ATAC_callpeaks"
+        , "Find_TF_sites_merge" ] ~> "Link_TF_gene_prepare"
+
+    node "Link_TF_gene" [| \(ContextData tfbs (peak, hic, promoters)) ->
+        linkGeneToTFs <$> netOutput <*> return tfbs <*> return peak <*>
+            return hic <*> return promoters >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     node "Output_network" [| \x -> printEdgeList <$> netOutput <*>
         return x >>= liftIO
         |] $ batch .= 1 >> stateful .= True
     path ["Link_TF_gene_prepare", "Link_TF_gene", "Output_network"]
 
-
 linkGeneToTFs :: FilePath   -- ^ Output dir
-              -> FilePath   -- ^ Annotation file
               -> FilePath   -- ^ TFBS
               -> ATACSeq    -- ^ peaks
               -> Maybe HiC        -- ^ 3D interaction
+              -> [((B.ByteString, Int, Bool), B.ByteString)]  -- ^ Genes
               -> IO ATACSeq
-linkGeneToTFs dir anno tfbs e hic = do
+linkGeneToTFs dir tfbs e hic activeGenes = do
     peaks <- readBed' $ peakFl^.location
-
-    -- Identify active genes
-    activeGenes <- gencodeActiveGenes anno peaks
-
     regulators <- runResourceT $ readBed tfbs $$ findRegulators activeGenes loops peaks
-
     let result :: [Linkage]
         result = map (second (
             map ((head *** id) . unzip) .
