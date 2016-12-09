@@ -54,7 +54,7 @@ builder = do
         mapM_ (liftIO . rm . fromText . T.pack) xs
         return output
         |] $ stateful .= True >> submitToRemote .= Just False
-    path [ "ATAC_IDR", "Find_TF_sites_prepare", "Find_TF_sites"
+    path [ "ATAC_callpeaks", "Find_TF_sites_prepare", "Find_TF_sites"
          , "Find_TF_sites_merge" ]
 
     node "Output_TF_sites" [| \(es, tfbs) -> do
@@ -67,4 +67,4 @@ builder = do
             (readBed tfbs :: Source IO BED) =$= intersectBed peaks $$
                 writeBed output
         |] $ stateful .= True
-    ["ATAC_IDR", "Find_TF_sites_merge"] ~> "Output_TF_sites"
+    ["ATAC_callpeaks", "Find_TF_sites_merge"] ~> "Output_TF_sites"

@@ -13,6 +13,10 @@ build-type:          Simple
 extra-source-files:  stack.yaml, example_config.yml, example_input.yml
 cabal-version:       >=1.10
 
+Flag idr
+  Description: Call peaks using IDR framework
+  Default:     False
+
 executable taiji
   hs-source-dirs:      app
   main-is:             Main.hs
@@ -48,6 +52,12 @@ executable taiji
     , yaml
 
   default-language:    Haskell2010
+
+  if flag(idr)
+    other-modules: Component.ATACSeq.CallPeak.IDR
+  else
+    other-modules: Component.ATACSeq.CallPeak.MACS2
+
   other-modules:
     Component.ATACSeq
     Component.Initialization
