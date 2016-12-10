@@ -19,9 +19,11 @@ import           Constants
 
 builder :: Builder ()
 builder = do
+    node "ATAC_MACS_prepare" [| return . mergeExps |] $ submitToRemote .= Just False
+
     node "ATAC_callpeaks" [| mapOfFiles $ \e r fl -> do
         dir <- atacOutput
-        if r^.number /= 0 || not (formatIs BedGZip fl) || not (formatIs BedFile fl)
+        if r^.number /= 0 || not (formatIs BedGZip fl || formatIs BedFile fl)
             then return []
             else do
                 let output = printf "%s/%s_rep%d_MACS.narrowPeak" dir
@@ -29,4 +31,4 @@ builder = do
                 result <- liftIO $ callPeaks output fl Nothing $ pair .= pairedEnd e
                 return [result]
         |] $ batch .= 1 >> stateful .= True
-    path ["ATAC_callpeaks_prepare", "ATAC_callpeaks"]
+    path ["ATAC_callpeaks_prepare", "ATAC_MACS_prepare", "ATAC_callpeaks"]
