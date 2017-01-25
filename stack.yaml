@@ -1,7 +1,9 @@
 resolver: nightly-2016-12-06
 
 packages:
-    - '.'
+    - 'taiji'
+
+    - 'taiji-viz'
 
     - location:
         git: https://github.com/kaizhang/bioinformatics-toolkit.git
