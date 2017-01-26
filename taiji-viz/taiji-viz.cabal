@@ -25,10 +25,12 @@ executable taiji-viz
     , bioinformatics-toolkit
     , bytestring
     , bytestring-lexing
+    , colour
     , diagrams-core
     , diagrams-lib
     , diagrams-rasterific
     , vector
+    , unordered-containers
 
   default-language:    Haskell2010
 
