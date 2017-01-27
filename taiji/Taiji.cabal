@@ -10,7 +10,7 @@ maintainer:          kai@kzhang.org
 copyright:           (c) 2016 Kai Zhang
 category:            Bio
 build-type:          Simple
-extra-source-files:  stack.yaml, example_config.yml, example_input.yml
+extra-source-files:  example_config.yml, example_input.yml
 cabal-version:       >=1.10
 
 Flag idr

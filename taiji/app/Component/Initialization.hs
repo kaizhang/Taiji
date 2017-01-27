@@ -17,20 +17,26 @@ import           Control.Monad.IO.Class     (liftIO)
 import           Data.Aeson.Types           (Value (..), parseMaybe)
 import           Data.CaseInsensitive       (CI, mk)
 import qualified Data.HashMap.Strict        as M
-import           Data.Maybe                 (fromMaybe)
+import           Data.List                  (foldl')
+import           Data.Maybe                 (fromMaybe, fromJust)
 import qualified Data.Text                  as T
 import           Data.Yaml                  (decodeFile)
 import           Scientific.Workflow        hiding (Success)
 import           Shelly                     (fromText, mkdir_p, shelly, test_f)
 import           System.IO                  (hPutStrLn, stderr)
+import           Text.Printf                (printf)
 
 import           Constants
 
 builder :: Builder ()
 builder = do
-    node "Initialization" [| \() -> mkAllDirs >> mkIndices >> readData |] $ do
-        label .= "Initialization"
-        stateful .= True
+    node "Initialization" [| \() -> do
+        dat <- mkAllDirs >> mkIndices >> readData
+        case validateData dat of
+            Left x  -> error x
+            Right _ -> return dat
+        |] $ do label .= "Initialization"
+                stateful .= True
 
 
 -- | Create directories
@@ -94,9 +100,18 @@ readData = do
     readYml fl = do
         result <- decodeFile fl
         case result of
-            Nothing -> error "Unable to read input file. Formatting error!"
+            Nothing  -> error "Unable to read input file. Formatting error!"
             Just dat -> return $ M.fromList $ map (first mk) $ M.toList dat
 
--- | TODO: Make sure the input data has all needed information.
-validateData :: InputData -> Bool
-validateData = undefined
+validateData :: InputData -> Either String ()
+validateData (atac, chip, rna, hic) = foldl' f (Right ()) counts
+  where
+    f (Left x) _ = Left x
+    f (Right ()) (x,c)
+        | c < nExps = Left $ printf
+            "Missing Group %s in some experiments. Please check your inputs." (T.unpack x)
+        | otherwise = Right ()
+    counts = M.toList $ M.fromListWith (+) $ zip (map fromJust $ concat groupNames) $ repeat 1
+    nExps = length groupNames
+    groupNames = filter (not . null) [ map (^.groupName) atac
+        , map (^.groupName) chip, map (^.groupName) rna, map (^.groupName) hic ]
