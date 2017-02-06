@@ -37,7 +37,7 @@ genome: "/home/kai/genome/GRCh38/genome.fa"
 annotation: "/home/kai/genome/GRCh38/gencode.v25.annotation.gtf"
 
 # MEME format file containing motifs. Human and mouse motif files can be found
-# here: https://github.com/kaizhang/Taiji/tree/master/data/motifs
+# here: https://github.com/kaizhang/Taiji/tree/master/docs/data/motifs
 motifFile: "/home/kai/motif_databases/cisBP_human.meme"
 
 

@@ -16,10 +16,10 @@ How to use
 To run the Taiji pipeline, you would need 2 configuration files.
 
 The first configuration file is used to specify the options used by the pipeline.
-Please look at the `example configuration file <https://github.com/kaizhang/Taiji/blob/master/example_config.yml>`_ for details.
+Please look at :download:`this example configuration file <data/example_config.yml>` for details.
 
 The second configuration file contains the information about the input data sets.
-Take a look at this `example <https://github.com/kaizhang/Taiji/blob/master/example_input.yml>`_.
+Take a look at :download:`this example file <data/example_input.yml>`.
 
 To run the pipeline, supply the ``taiji`` with the first configuration file: ``taiji run --config example_config.yml`` or ``taiji run --config example_config.yml --remote`` if the program is compiled with ``sge`` flag.
 
