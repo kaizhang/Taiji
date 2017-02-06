@@ -22,12 +22,12 @@ spotPlot rowlab collab = vsep 1 . (header:) . zipWith g rowlab . map draw
   where
     draw dat = hsep 1 $ zipWith mkCircle ranks' expr'
       where
-        ranks' = linearMap (2, 15) $ map log ranks
-        expr' = linearMap (0, 1) $ map ihs' expr
+        ranks' = linearMap (0, 1) ranks
+        expr' = linearMap (2, 15) expr
         (ranks, expr) = unzip dat
     header = alignR $ hsep 1 $ map (\x ->
         (alignB $ center $ scale 6 $ texterific x # rotate (90 @@ deg)) <> box) collab
-    mkCircle x y = withEnvelope box $ circle x # lw 0 # fc (blend y red white)
+    mkCircle x y = withEnvelope box $ circle y # lw 0 # fc (blend x red white)
     g lab x = alignR $ center (scale 6 $ texterific lab) ||| strutX 2 ||| x
     box = circle 15 # lw 0 :: Diagram B
 

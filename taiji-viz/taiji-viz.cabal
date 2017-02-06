@@ -26,11 +26,13 @@ executable taiji-viz
     , bytestring
     , bytestring-lexing
     , colour
+    , clustering
     , diagrams-core
     , diagrams-lib
     , diagrams-rasterific
     , vector
     , unordered-containers
+    , statistics
 
   default-language:    Haskell2010
 
