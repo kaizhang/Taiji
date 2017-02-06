@@ -1,0 +1,79 @@
+################################################################################
+# *Important*: Proper identation of the text is critical for parsing!
+# Lines starting with a '#' character are comments, for human reading only.
+# Further read about the YAML format: http://www.yaml.org/start.html.
+################################################################################
+
+# NOTE: Each experiment must have a *UNIQUE* ID.
+# Related experiments must share the same group name.
+# For example, you want to use "spleen" as the group name for
+# "spleen_ATAC_Seq", "spleen_RNA_Seq", etc.
+
+ATAC-Seq:
+  - id: spleen_ATAC
+    group: spleen
+    replicates:
+      - rep: 1
+        files:
+          - path: ATAC-Seq/spleen-filename-replicate1.fastq.gz
+      - rep: 2
+        files:
+          - path: ATAC-Seq/spleen-filename-replicate2.fastq
+      - rep: 3
+        files:
+          - path: ATAC-Seq/spleen-filename-replicate3.fastq
+
+  - id: liver_ATAC
+    group: liver
+    replicates:
+      - rep: 1
+        files:
+          # You can use bam file as input as well
+          - path: ATAC-Seq/liver-filename-replicate1.bam
+
+RNA-Seq:
+  - id: spleen_RNA
+    group: spleen
+    replicates:
+      - rep: 1
+        files:
+          - path: RNA-seq/spleen-filename-replicate1.fastq.gz
+      - rep: 2
+        files:
+          # You can also privide the program with computed gene quantification
+          # in a plain text file containing two columns separated by Tabs,
+          # where the first column is gene names and the second column is
+          # expression levels. Example:
+          # Gene1 <TAB> 12
+          # Gene2 <TAB> 20
+          - path: RNA-seq/spleen-gene-quant-replicate2.tsv
+            # A specific tag is required
+            tags : ["gene quantification"]
+
+  - id: liver_RNA
+    group: liver
+    pairedEnd: true
+    replicates:
+      - rep: 1
+        files:
+          # pair-ended samples
+          - pair:
+            - path: RNA-Seq/liver-filename-replicate1-forward.fastq.gz
+            - path: RNA-Seq/liver-filename-replicate1-reverse.fastq.gz
+
+HiC:
+  - id: liver_HiC
+    group: liver
+    replicates:
+      - rep: 1
+        files:
+          # Currently the pipeline do not analyze HiC data, so the user need to
+          # provide the end result - a list of loops, in following format:
+          # chrom_1 <TAB> start_1 <TAB> end_1 <TAB> chrom_2 <TAB> start_2 <TAB> end_2
+          # An example:
+          # chr21 <TAB> 29343 <TAB> 500000 <TAB> chr21 <TAB> 1009340 <TAB> 1023400
+          - path: HiC/liver-loops.txt
+            tags: ["loops"]
+
+# ChIP-seq will not be analyzed in beta release
+ChIP-Seq: []
