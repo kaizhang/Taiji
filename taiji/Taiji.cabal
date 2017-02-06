@@ -1,13 +1,13 @@
 name:                Taiji
-version:             0.1.0-beta6
+version:             0.1.1-dev
 synopsis:            An integrated analysis pipeline.
 description:         Please see README.md
--- homepage:
+homepage:            http://kzhang.org/Taiji/
 license:             BSD3
 license-file:        LICENSE
 author:              Kai Zhang
 maintainer:          kai@kzhang.org
-copyright:           (c) 2016 Kai Zhang
+copyright:           (c) 2016-2017 Kai Zhang
 category:            Bio
 build-type:          Simple
 extra-source-files:  example_config.yml, example_input.yml
