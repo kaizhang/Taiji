@@ -13,8 +13,8 @@ import           Bio.Data.Bed
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
 import           Bio.GO.GREAT
-import           Bio.Pipeline.Instances    ()
 import           Bio.Pipeline.CallPeaks
+import           Bio.Pipeline.Instances    ()
 import           Bio.Utils.Misc            (readInt)
 import           Conduit
 import           Control.Arrow             (first, second, (&&&), (***))
@@ -26,12 +26,13 @@ import           Data.Function             (on)
 import qualified Data.HashMap.Strict       as M
 import qualified Data.IntervalMap.Strict   as IM
 import           Data.List
+import           Data.List.Ordered         (nubSort)
 import           Data.Maybe
 import           Data.Ord
 import qualified Data.Set                  as S
 import qualified Data.Text                 as T
 import           Scientific.Workflow
-import System.IO.Temp (withTempFile)
+import           System.IO.Temp            (withTempFile)
 
 import           Constants
 import           Types
@@ -154,7 +155,7 @@ gencodeActiveGenes input peaks = do
                 else BED chr (i-1000) (i+5000) (Just geneName)
                      (Just $ fromIntegral i) (Just False)
             ) $ map f $ filter g $ map (B.split '\t') $ B.lines c
-    return $ map (\x -> ( (chrom x, truncate $ fromJust $ bedScore x,
+    return $ nubSort $ map (\x -> ( (chrom x, truncate $ fromJust $ bedScore x,
         fromJust $ bedStrand x), fromJust $ bedName x )) $ fst $ unzip $
         runIdentity $ yieldMany promoters =$= intersectBedWith id peaks =$=
         filterC (not . null . snd) $$ sinkList
