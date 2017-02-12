@@ -30,6 +30,7 @@ executable taiji-viz
     , diagrams-core
     , diagrams-lib
     , diagrams-rasterific
+    , matrices
     , vector
     , unordered-containers
     , statistics
