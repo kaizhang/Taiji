@@ -25,15 +25,18 @@ executable taiji-viz
     , bioinformatics-toolkit
     , bytestring
     , bytestring-lexing
+    , case-insensitive
     , colour
     , clustering
     , diagrams-core
     , diagrams-lib
     , diagrams-rasterific
     , matrices
+    , optparse-applicative
+    , statistics
+    , split
     , vector
     , unordered-containers
-    , statistics
 
   default-language:    Haskell2010
 
