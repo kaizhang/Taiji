@@ -38,21 +38,29 @@ import           Types
 
 builder :: Builder ()
 builder = do
-    node "PageRank" [| \(x, gene_expr) -> liftIO $ case gene_expr of
-            Nothing -> do
-                hPutStrLn stderr "Running PageRank..."
-                pageRank x
-            Just e -> do
-                hPutStrLn stderr "Running personalized PageRank..."
-                personalizedPageRank (e, x)
-        |] $ return ()
-    ["Link_TF_gene", "Output_expression"] ~> "PageRank"
+    node "PageRank_prepare" [| \(exps, gene_expr) -> case gene_expr of
+        Nothing -> return $ map (\x -> (Nothing, x)) exps
+        Just e -> do
+            rnaseqData <- readExpression e
+            return $ flip map exps $ \x ->
+                (fmap M.toList $ lookup (B.pack $ T.unpack $ fromJust $ x^.groupName) rnaseqData, x)
+        |] $ submitToRemote .= Just False
+    node "PageRank" [| \(gene_expr, e) -> do
+        r <- pageRank (fmap M.fromList gene_expr) e
+        return (fromJust $ e^.groupName, r)
+        |] $ batch .= 1
+    node "Output_ranks" [| \results -> do
+        let genes = nubSort $ concatMap (fst . unzip) $ snd $ unzip results
+            (groupNames, ranks) = unzip $ flip map results $ \(name, xs) ->
+                let geneRanks = M.fromList xs
+                in (name, flip map genes $ \g -> M.lookupDefault 0 g geneRanks)
+            dataTable = (groupNames, map original genes, transpose ranks)
 
-    node "Output_ranks" [| \x -> do
         dir <- rankOutput
-        liftIO $ outputData dir x (getMetrics x)
+        liftIO $ outputData dir dataTable $ getMetrics dataTable
         |] $ submitToRemote .= Just False >> stateful .= True
-    ["PageRank"] ~> "Output_ranks"
+    ["Link_TF_gene", "Output_expression"] ~> "PageRank_prepare"
+    path ["PageRank_prepare", "PageRank", "Output_ranks"]
 
 
 -- | Read RNA expression data
@@ -72,48 +80,26 @@ readExpression fl = do
         | all (<1) xs || all (==head xs) xs = replicate (length xs) (-10)
         | otherwise = U.toList $ scale $ U.fromList xs
 
-pageRank :: Experiment e => [e] -> IO ([T.Text], [B.ByteString], [[Double]])
-pageRank es = do
-    results <- forM es $ \e -> do
-        gr <- buildNet e
-        let tfs = S.fromList $ filter (not . null . pre gr) $ nodes gr
-        return $ flip mapMaybe (zip [0..] $ pagerank gr Nothing 0.85) $ \(i, rank) ->
-            if i `S.member` tfs
-                then Just (nodeLab gr i, rank)
-                else Nothing
-    let genes = nubSort $ concatMap (fst . unzip) results
-        expNames = map (fromJust . (^.groupName)) es
-        ranks = flip map results $ \xs ->
-            let geneRanks = M.fromList xs
-            in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
-    return (expNames, map original genes, transpose ranks)
-
-personalizedPageRank :: Experiment e
-                     => (FilePath, [e])
-                     -> IO ([T.Text], [B.ByteString], [[Double]])
-personalizedPageRank (rnaseq, es) = do
-    rnaseqData <- readExpression rnaseq
-
-    results <- forM es $ \e -> do
-        gr <- buildNet e
-        let lookupExpr x = M.lookupDefault (0.01,-10) x $ fromJust $ lookup
-                (B.pack $ T.unpack $ fromJust $ e^.groupName) rnaseqData
-            nodeWeights = map (exp . snd . lookupExpr) labs
-            edgeWeights = map (sqrt . fst . lookupExpr . nodeLab gr . snd) $ edges gr
-            labs = map (nodeLab gr) $ nodes gr
-            tfs = S.fromList $ filter (not . null . pre gr) $ nodes gr
-            ranks = personalizedPagerank gr nodeWeights (Just edgeWeights) 0.85
-        return $ flip mapMaybe (zip [0..] ranks) $ \(i, rank) ->
-            if i `S.member` tfs
-                then Just (nodeLab gr i, rank)
-                else Nothing
-
-    let genes = nubSort $ concatMap (fst . unzip) results
-        expNames = map (fromJust . (^.groupName)) es
-        ranks = flip map results $ \xs ->
-            let geneRanks = M.fromList xs
-            in flip map genes $ \g -> M.lookupDefault 0 g geneRanks
-    return (expNames, map original genes, transpose ranks)
+pageRank :: Experiment e
+         => Maybe (M.HashMap GeneName (Double, Double))   -- ^ Expression data
+         -> e
+         -> IO [(GeneName, Double)]
+pageRank expr e = do
+    gr <- buildNet e
+    let labs = map (nodeLab gr) $ nodes gr
+        tfs = S.fromList $ filter (not . null . pre gr) $ nodes gr
+        ranks = case expr of
+            Just expr' ->
+                let lookupExpr x = M.lookupDefault (0.01,-10) x expr'
+                    nodeWeights = map (exp . snd . lookupExpr) labs
+                    edgeWeights = map (sqrt . fst . lookupExpr . nodeLab gr . snd) $
+                        edges gr
+                in personalizedPagerank gr nodeWeights (Just edgeWeights) 0.85
+            Nothing -> pagerank gr Nothing 0.85
+    return $ flip mapMaybe (zip [0..] ranks) $ \(i, rank) ->
+        if i `S.member` tfs
+            then Just (nodeLab gr i, rank)
+            else Nothing
 
 buildNet :: Experiment e => e -> IO (LGraph D GeneName ())
 buildNet e = do

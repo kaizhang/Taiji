@@ -2,8 +2,8 @@ resolver: nightly-2016-12-06
 
 packages:
     - 'taiji'
-
     - 'taiji-viz'
+    - 'bio-pipelines'
 
     - location:
         git: https://github.com/kaizhang/bioinformatics-toolkit.git
@@ -12,10 +12,6 @@ packages:
     - location:
         git: https://github.com/kaizhang/bio-experiments.git
         commit: 3d268c3b0cf0006b5c5ad01240b62ddbeb349bc0
-
-    - location:
-        git: https://github.com/kaizhang/bio-pipelines.git
-        commit: 5e75c188cd732134841ca5df7f395d04368c46fa
 
     - location:
         git: https://github.com/kaizhang/SciFlow.git
