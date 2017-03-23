@@ -17,35 +17,7 @@ import qualified Data.Vector                    as V
 import           Diagrams.Backend.Rasterific
 import           Diagrams.Prelude
 
-data Table a = Table
-    { rowNames :: [String]
-    , colNames :: [String]
-    , matrix   :: M.Matrix a
-    }
-
-type ReodrderFn a = [(String, V.Vector a)] -> [(String, V.Vector a)]
-type FilterFn a = (String, V.Vector a) -> Bool
-
-filterRows :: FilterFn a -> Table a -> Table a
-filterRows fn table = table
-    { rowNames = names
-    , matrix = M.fromRows rows }
-  where
-    (names, rows) = unzip $ filter fn $ zip (rowNames table) $ M.toRows $ matrix table
-
-reorderRows :: ReodrderFn a -> Table a -> Table a
-reorderRows fn table = table
-    { rowNames = names
-    , matrix = M.fromRows rows }
-  where
-    (names, rows) = unzip $ fn $ zip (rowNames table) $ M.toRows $ matrix table
-
-reorderColumns :: ReodrderFn a -> Table a -> Table a
-reorderColumns fn table = table
-    { colNames = names
-    , matrix = M.fromColumns cols}
-  where
-    (names, cols) = unzip $ fn $ zip (colNames table) $ M.toColumns $ matrix table
+import Taiji.Visualize.Data
 
 spotPlot :: Table (Double, Double) -> Diagram B
 spotPlot (Table rowlab collab xs) = vsep 1 $ (header:) $ zipWith g rowlab $
@@ -64,13 +36,6 @@ spotPlot (Table rowlab collab xs) = vsep 1 $ (header:) $ zipWith g rowlab $
     mkCircle x y = withEnvelope box $ circle y # lw 0 # fc (blend x red white)
     g lab x = alignR $ center (scale 10 $ texterific lab) ||| strutX 5 ||| x
     box = circle 15 # lw 0 :: Diagram B
-
-readTSV :: B.ByteString -> M.HashMap (CI.CI B.ByteString, CI.CI B.ByteString) Double
-readTSV input = M.fromList $ concatMap (f . B.split '\t') content
-  where
-    f (x:xs) = zipWith (\s v -> ((CI.mk x, CI.mk s), readDouble v)) samples xs
-    (header:content) = B.lines input
-    samples = tail $ B.split '\t' header
 
 logFoldChange :: [Double] -> [Double]
 logFoldChange xs = map (ihs' . (/ m)) xs

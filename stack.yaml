@@ -1,4 +1,4 @@
-resolver: nightly-2016-12-06
+resolver: lts-8.5
 
 packages:
     - 'taiji'
@@ -15,11 +15,11 @@ packages:
 
     - location:
         git: https://github.com/kaizhang/SciFlow.git
-        commit: 47d01ab509075c83159c8b9764253546c10754be
+        commit: bc0abe9d709692217bf6a31593646dad7e310aba
 
 extra-deps:
     - haskell-igraph-0.2.2
     - hexpat-0.20.9
     - List-0.5.2
-    - drmaa-0.1.1
+    - drmaa-0.2.0
     - HsHTSLib-1.3.2.0

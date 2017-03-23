@@ -20,6 +20,7 @@ import           Diagrams.Prelude (dims2D, width, height)
 import           Options.Applicative
 import           Statistics.Sample           (meanVarianceUnb)
 import           System.Environment
+
 import           Taiji.Visualize
 
 data Options = Options
@@ -69,6 +70,7 @@ defaultMain opts = do
         n = fromIntegral $ length (head xs) * 50
         dia = spotPlot table'
     renderRasterific (output opts) (dims2D n (n*(h/w))) dia
+    print $ map (V.toList . pValueGaussian . fst . V.unzip) $ M.toRows $ matrix table'
   where
     distFn x y = euclidean (fst $ V.unzip $ snd x) (fst $ V.unzip $ snd y)
     f (_, xs) = V.any (>1e-4) xs' && case () of
