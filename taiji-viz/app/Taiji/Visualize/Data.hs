@@ -1,21 +1,22 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE GADTs            #-}
 
 module Taiji.Visualize.Data where
 
-import           Bio.Utils.Functions            (ihs')
 import           Bio.Utils.Misc                 (readDouble)
 import qualified Data.ByteString.Char8          as B
-import           Data.ByteString.Lex.Fractional
 import qualified Data.CaseInsensitive           as CI
 import qualified Data.HashMap.Strict            as M
 import qualified Data.Matrix                    as M
 import           Data.Maybe
+import           Data.List (sortBy, isPrefixOf)
 import qualified Data.Vector                    as V
-import Statistics.Function (sort)
-import Statistics.Sample (meanVarianceUnb)
-import Statistics.Distribution.Normal (normalDistr)
-import Statistics.Distribution (complCumulative)
+import qualified Data.Vector.Unboxed            as U
+import           Statistics.Distribution        (complCumulative)
+import           Statistics.Distribution.Normal (normalDistr)
+import           Statistics.Function            (sort)
+import           Statistics.Sample              (meanVarianceUnb)
 
 data Table a = Table
     { rowNames :: [String]
@@ -56,9 +57,29 @@ readTSV input = M.fromList $ concatMap (f . B.split '\t') content
 
 -- | Convert a list of values to p-values, assuming a Gaussian distribution.
 -- The average and variance is calculated from the lower 90% of the data.
-pValueGaussian :: V.Vector Double -> V.Vector Double
-pValueGaussian xs = V.map (complCumulative distribution) xs
+pValueGaussian :: U.Vector Double -> U.Vector Double
+pValueGaussian xs = U.map (complCumulative distribution) xs
   where
     distribution = normalDistr m $ sqrt v
-    (m, v) = meanVarianceUnb $ V.take n $ sort xs
-    n = truncate $ fromIntegral (V.length xs) * 0.9
+    (m, v) = meanVarianceUnb $ U.take n $ sort xs
+    n = truncate $ fromIntegral (U.length xs) * 0.9
+
+orderByName :: [String] -> ReodrderFn a
+orderByName prefix = sortBy $ \(a,_) (b,_) ->
+    let idx1 = findIdx a
+        idx2 = findIdx b
+    in case () of
+        _ | isJust idx1 && isJust idx2 -> case compare idx1 idx2 of
+                LT -> LT
+                GT -> GT
+                EQ -> compare a b
+          | otherwise -> compare a b
+  where
+    findIdx x = go prefix 0
+      where
+        go (y:ys) !i | isPrefixOf y x = Just i
+                     | otherwise = go ys (i+1)
+        go _ _ = Nothing
+
+filterByName :: [String] -> FilterFn a
+filterByName xs = \(x, _) -> x `elem` xs

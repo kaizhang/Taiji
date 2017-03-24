@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
 module Main where
 
 import           AI.Clustering.Hierarchical
@@ -7,8 +6,8 @@ import qualified Data.ByteString.Char8       as B
 import qualified Data.CaseInsensitive        as CI
 import           Data.Function
 import qualified Data.HashMap.Strict         as HM
-import           Data.List
-import Data.List.Split (splitOn)
+import Data.List (groupBy, sort, sortBy)
+import           Data.List.Split             (splitOn)
 import qualified Data.Matrix                 as M
 import           Data.Maybe
 import           Data.Ord                    (compare, comparing)
@@ -16,12 +15,13 @@ import           Data.Semigroup              ((<>))
 import qualified Data.Vector                 as V
 import qualified Data.Vector.Unboxed         as U
 import           Diagrams.Backend.Rasterific (renderRasterific)
-import           Diagrams.Prelude (dims2D, width, height)
+import           Diagrams.Prelude            (dims2D, height, width)
 import           Options.Applicative
 import           Statistics.Sample           (meanVarianceUnb)
 import           System.Environment
 
 import           Taiji.Visualize
+import           Taiji.Visualize.Data
 
 data Options = Options
     { input          :: FilePath
@@ -29,6 +29,7 @@ data Options = Options
     , rowNamesFilter :: Maybe FilePath
     , colNamesFilter :: Maybe FilePath
     , expression     :: FilePath
+    , pValue         :: Double
     }
 
 parser :: Parser Options
@@ -43,6 +44,11 @@ parser = Options
       ( long "colNamesFilter" )
     <*> strOption
       ( long "expression" )
+    <*> option auto
+      ( long "p-value"
+     <> value 1e-5
+     <> help "P-value for calling cell-type-specific TFs. (default: 1e-5)"
+      )
 
 defaultMain :: Options -> IO ()
 defaultMain opts = do
@@ -61,16 +67,15 @@ defaultMain opts = do
             names <- lines <$> readFile fl
             return $ filterRows (filterByName names) dataTable
 
-    --let table' = reorderColumns (orderByName ["neural-tube", "forebrain", "midbrain", "hindbrain", "heart", "intestine", "kidney", "limb", "liver", "lung", "stomach"]) $
+    let table' = reorderColumns (orderByName ["neural-tube", "forebrain", "midbrain", "hindbrain", "heart", "intestine", "kidney", "limb", "liver", "lung", "stomach"]) $
+           reorderRows (\x -> flatten $ hclust Ward (V.fromList x) distFn) dataTable'
+    --let table' = reorderColumns (sortBy (comparing (last . splitOn "_" . fst))) $
      --       reorderRows (\x -> flatten $ hclust Ward (V.fromList x) distFn) dataTable'
-    let table' = reorderColumns (sortBy (comparing (last . splitOn "_" . fst))) $
-            reorderRows (\x -> flatten $ hclust Ward (V.fromList x) distFn) dataTable'
         w = width dia
         h = height dia
         n = fromIntegral $ length (head xs) * 50
-        dia = spotPlot table'
+        dia = spotPlot (pValue opts) table'
     renderRasterific (output opts) (dims2D n (n*(h/w))) dia
-    print $ map (V.toList . pValueGaussian . fst . V.unzip) $ M.toRows $ matrix table'
   where
     distFn x y = euclidean (fst $ V.unzip $ snd x) (fst $ V.unzip $ snd y)
     f (_, xs) = V.any (>1e-4) xs' && case () of
@@ -88,23 +93,3 @@ main = defaultMain =<< execParser opts
     opts = info (parser <**> helper)
       ( fullDesc
      <> header "Taiji-viz - a visualization tool for Taiji" )
-
-orderByName :: [String] -> ReodrderFn a
-orderByName prefix = sortBy $ \(a,_) (b,_) ->
-    let idx1 = findIdx a
-        idx2 = findIdx b
-    in case () of
-        _ | isJust idx1 && isJust idx2 -> case compare idx1 idx2 of
-                LT -> LT
-                GT -> GT
-                EQ -> compare a b
-          | otherwise -> compare a b
-  where
-    findIdx x = go prefix 0
-      where
-        go (y:ys) !i | isPrefixOf y x = Just i
-                     | otherwise = go ys (i+1)
-        go _ _ = Nothing
-
-filterByName :: [String] -> FilterFn a
-filterByName xs = \(x, _) -> x `elem` xs
