@@ -3,10 +3,10 @@
 
 module Taiji.Visualize where
 
-import           Bio.Utils.Functions            (ihs')
+import           Bio.Utils.Functions            (ihs', scale)
 import           Bio.Utils.Misc                 (readDouble)
+import           Control.Arrow                  (first)
 import qualified Data.ByteString.Char8          as B
-import qualified Data.Vector.Generic         as G
 import           Data.ByteString.Lex.Fractional
 import qualified Data.CaseInsensitive           as CI
 import           Data.Colour                    (blend)
@@ -15,29 +15,42 @@ import           Data.List.Split                (chunksOf)
 import qualified Data.Matrix                    as M
 import           Data.Maybe
 import qualified Data.Vector                    as V
-import           Diagrams.Backend.Rasterific
-import           Diagrams.Prelude
+import qualified Data.Vector.Generic            as G
+import           Diagrams.Backend.Cairo         (B)
+import           Diagrams.Prelude               hiding (scale)
+import           Diagrams.TwoD.Text
+import           Graphics.SVGFonts              (textSVG)
 
-import Taiji.Visualize.Data
+import           Taiji.Visualize.Data
 
-spotPlot :: Double -> Table (Double, Double) -> Diagram B
-spotPlot cutoff (Table rowlab collab xs) = vsep 1 $ (header:) $ zipWith g rowlab $
-    map draw $ M.toRows $ M.zip3 ranks expr' pvalues
+heatmap :: Table (Double, Double) -> Diagram B
+heatmap (Table rowlab collab xs) = vcat $ (header:) $ map (hcat . map mkRect) ranks'
   where
-    draw dat = hsep 1 $ V.toList $ V.zipWith3 mkCircle r' e p
-      where
-        r' = linearMap (0, 1) r
-        (r, e, p) = V.unzip3 dat
+    mkRect x = rect 15 2 # lw 0 # fc (blend x red white)
+    header = hcat $ map (\x ->
+        (alignB $ textBounded x # rotate (90 @@ deg)) <> box) collab
+    ranks' = M.toLists (M.fromVector (M.dim xs) $ linearMap (0, 1) $
+        M.flatten $ fst $ M.unzip xs :: M.Matrix Double)
+    textBounded x = stroke (textSVG x 15) # lw 0 # fc black
+    box = rect 15 3 # lw 0 :: Diagram B
+
+spotPlot :: Double -> Table ((Double, Double), Double) -> Diagram B
+spotPlot cutoff (Table rowlab collab xs)
+    | null rowlab = error "Nothing to plot"
+    | otherwise = vsep 1 $ (header:) $ zipWith g rowlab $
+        map (hsep 1 . map mkCircle) $ M.toLists $ M.zip3 ranks' expr' pvalues
+  where
     header = alignR $ hsep 1 $ map (\x ->
-        (alignB $ center $ scale 10 $ texterific x # rotate (90 @@ deg)) <> box) collab
-    mkCircle x y p
+        (alignB $ textBounded x # rotate (90 @@ deg)) <> box) collab
+    mkCircle (x, y, p)
         | p <= cutoff = withEnvelope box $ circle y # lw 0 # fc (blend x red white) # showOrigin
         | otherwise = withEnvelope box $ circle y # lw 0 # fc (blend x red white)
-    g lab x = alignR $ center (scale 10 $ texterific lab) ||| strutX 5 ||| x
+    g lab x = alignR $ textBounded lab ||| strutX 5 ||| x
     box = circle 15 # lw 0 :: Diagram B
     expr' = M.fromVector (M.dim expr) $ linearMap (4, 16) $ M.flatten expr
-    pvalues = M.fromRows $ map (G.convert . pValueGaussian . G.convert) $ M.toRows ranks
-    (ranks, expr) = M.unzip xs
+    ranks' = M.fromVector (M.dim ranks) $ linearMap (0, 1) $ M.flatten ranks
+    ((ranks, expr), pvalues) = first M.unzip $ M.unzip xs
+    textBounded x = stroke (textSVG x 15) # lw 0 # fc black
 
 logFoldChange :: [Double] -> [Double]
 logFoldChange xs = map (ihs' . (/ m)) xs

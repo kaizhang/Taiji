@@ -13,19 +13,19 @@ import           Scientific.Workflow.Main         (MainOpts (..),
                                                    defaultMainOpts, mainWith)
 import           Text.Printf                      (printf)
 
-import qualified Component.ATACSeq                as ATACSeq
-import qualified Component.Initialization         as Initialization
+import qualified Taiji.Component.ATACSeq                as ATACSeq
+import qualified Taiji.Component.Initialization         as Initialization
+import qualified Taiji.Component.Network                as Network
+import qualified Taiji.Component.Rank                   as Rank
+import qualified Taiji.Component.RNASeq                 as RNASeq
+import qualified Taiji.Component.TFBS                   as TFBS
 
 #ifdef IDR_PEAK_CALLER
-import qualified Component.ATACSeq.CallPeak.IDR   as CallPeak
+import qualified Taiji.Component.ATACSeq.CallPeak.IDR   as CallPeak
 #else
-import qualified Component.ATACSeq.CallPeak.MACS2 as CallPeak
+import qualified Taiji.Component.ATACSeq.CallPeak.MACS2 as CallPeak
 #endif
 
-import qualified Component.Network                as Network
-import qualified Component.Rank                   as Rank
-import qualified Component.RNASeq                 as RNASeq
-import qualified Component.TFBS                   as TFBS
 
 mainWith defaultMainOpts
     { programHeader = printf "Taiji-v%s" (showVersion version)

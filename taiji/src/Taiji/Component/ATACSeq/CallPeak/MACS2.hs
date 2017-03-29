@@ -3,19 +3,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Component.ATACSeq.CallPeak.MACS2 (builder) where
+module Taiji.Component.ATACSeq.CallPeak.MACS2 (builder) where
 
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.CallPeaks
-import           Bio.Pipeline.NGS
 import           Bio.Pipeline.Utils (mapOfFiles)
 import           Control.Lens
 import           Control.Monad.IO.Class    (liftIO)
 import qualified Data.Text                 as T
 import           Scientific.Workflow
 
-import           Constants
+import           Taiji.Constants
 
 builder :: Builder ()
 builder = do

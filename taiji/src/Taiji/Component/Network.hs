@@ -7,7 +7,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Component.Network (builder) where
+module Taiji.Component.Network where
 
 import           Bio.Data.Bed
 import           Bio.Data.Experiment.Types
@@ -34,8 +34,8 @@ import qualified Data.Text                 as T
 import           Scientific.Workflow
 import           System.IO.Temp            (withTempFile)
 
-import           Constants
-import           Types
+import           Taiji.Constants
+import           Taiji.Types
 
 builder :: Builder ()
 builder = do

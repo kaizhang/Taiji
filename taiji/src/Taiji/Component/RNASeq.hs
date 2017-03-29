@@ -5,7 +5,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Component.RNASeq (builder) where
+module Taiji.Component.RNASeq (builder) where
 
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
@@ -26,7 +26,7 @@ import           Data.Maybe                        (fromJust)
 import qualified Data.Text                         as T
 import           Scientific.Workflow
 
-import           Constants
+import           Taiji.Constants
 
 builder :: Builder ()
 builder = do

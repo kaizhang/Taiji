@@ -5,7 +5,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Component.TFBS (builder) where
+module Taiji.Component.TFBS (builder) where
 
 import           Bio.Data.Bed
 import           Bio.Data.Experiment.Types
@@ -21,7 +21,7 @@ import qualified Data.Text                 as T
 import           Scientific.Workflow
 import           Shelly                    (fromText, rm, shelly)
 
-import           Constants
+import           Taiji.Constants
 
 builder :: Builder ()
 builder = do

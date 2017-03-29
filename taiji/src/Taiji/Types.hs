@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Types where
+module Taiji.Types where
 
 import           Bio.Data.Bed          (BED)
 import           Data.Binary           (Binary (..))

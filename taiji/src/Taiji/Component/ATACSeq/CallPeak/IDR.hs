@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Component.ATACSeq.CallPeak.IDR (builder) where
+module Taiji.Component.ATACSeq.CallPeak.IDR (builder) where
 
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
@@ -17,7 +17,7 @@ import qualified Data.Text                 as T
 import           Scientific.Workflow
 import           Shelly                    (fromText, mkdir_p, shelly)
 
-import           Constants
+import           Taiji.Constants
 
 
 builder :: Builder ()

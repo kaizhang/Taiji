@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Constants where
+module Taiji.Constants where
 
 import           Scientific.Workflow (ProcState, getConfig', getConfigMaybe')
 

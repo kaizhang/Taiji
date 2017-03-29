@@ -5,7 +5,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Component.Initialization (builder) where
+module Taiji.Component.Initialization (builder) where
 
 import           Bio.Data.Experiment.Parser
 import           Bio.Data.Experiment.Types
@@ -26,7 +26,7 @@ import           Shelly                     (fromText, mkdir_p, shelly, test_f)
 import           System.IO                  (hPutStrLn, stderr)
 import           Text.Printf                (printf)
 
-import           Constants
+import           Taiji.Constants
 
 builder :: Builder ()
 builder = do

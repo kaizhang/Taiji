@@ -6,7 +6,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Component.Rank (builder) where
+module Taiji.Component.Rank where
 
 import           Bio.Data.Experiment.Types
 import           Bio.Pipeline.Instances            ()
@@ -14,7 +14,6 @@ import           Bio.Utils.Functions               (scale)
 import           Bio.Utils.Misc                    (readDouble)
 import           Conduit
 import           Control.Lens                      hiding (pre)
-import           Control.Monad
 import           Data.Binary                       (decodeFile)
 import qualified Data.ByteString.Char8             as B
 import           Data.CaseInsensitive              (mk, original)
@@ -31,10 +30,9 @@ import           IGraph.Structure                  (pagerank,
                                                     personalizedPagerank)
 import           Scientific.Workflow
 import           Statistics.Sample                 (meanVarianceUnb)
-import           System.IO                         (hPutStrLn, stderr)
 
-import           Constants
-import           Types
+import           Taiji.Constants
+import           Taiji.Types
 
 builder :: Builder ()
 builder = do

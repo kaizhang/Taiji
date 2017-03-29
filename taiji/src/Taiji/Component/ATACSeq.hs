@@ -5,19 +5,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module Component.ATACSeq (builder) where
+module Taiji.Component.ATACSeq (builder) where
 
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.NGS
-import           Bio.Pipeline.Utils (mapOfFiles)
 import           Control.Lens
 import           Control.Monad.IO.Class    (liftIO)
 import           Data.Maybe                (catMaybes)
-import qualified Data.Text                 as T
 import           Scientific.Workflow
 
-import           Constants
+import           Taiji.Constants
 
 builder :: Builder ()
 builder = do

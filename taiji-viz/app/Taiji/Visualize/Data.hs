@@ -1,28 +1,32 @@
+{-# LANGUAGE BangPatterns     #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE GADTs            #-}
 
 module Taiji.Visualize.Data where
 
+import           Bio.Utils.Functions
 import           Bio.Utils.Misc                 (readDouble)
 import qualified Data.ByteString.Char8          as B
 import qualified Data.CaseInsensitive           as CI
-import qualified Data.HashMap.Strict            as M
+import           Data.Function                  (on)
+import qualified Data.HashMap.Strict            as HM
+import           Data.List                      (groupBy, isPrefixOf, sort,
+                                                 sortBy)
 import qualified Data.Matrix                    as M
 import           Data.Maybe
-import           Data.List (sortBy, isPrefixOf)
 import qualified Data.Vector                    as V
+import qualified Data.Vector.Generic            as G
 import qualified Data.Vector.Unboxed            as U
 import           Statistics.Distribution        (complCumulative)
-import           Statistics.Distribution.Normal (normalDistr)
-import           Statistics.Function            (sort)
-import           Statistics.Sample              (meanVarianceUnb)
+import           Statistics.Distribution.Normal (normalDistr, normalFromSample)
+import qualified Statistics.Function            as S
+import           Statistics.Sample              (meanVarianceUnb, mean)
 
 data Table a = Table
     { rowNames :: [String]
     , colNames :: [String]
     , matrix   :: M.Matrix a
-    }
+    } deriving (Show)
 
 type ReodrderFn a = [(String, V.Vector a)] -> [(String, V.Vector a)]
 type FilterFn a = (String, V.Vector a) -> Bool
@@ -48,8 +52,30 @@ reorderColumns fn table = table
   where
     (names, cols) = unzip $ fn $ zip (colNames table) $ M.toColumns $ matrix table
 
-readTSV :: B.ByteString -> M.HashMap (CI.CI B.ByteString, CI.CI B.ByteString) Double
-readTSV input = M.fromList $ concatMap (f . B.split '\t') content
+-- | Read data, normalize and calculate p-values.
+readData :: FilePath   -- ^ PageRank
+         -> FilePath   -- ^ Gene expression
+         -> IO (Table (Double, Double))  -- ^ ranks, expression and p-values
+readData input1 input2 = do
+    rank <- (fmap ihs' . readTSV) <$> B.readFile input1
+    expr <- (fmap ihs' . readTSV) <$> B.readFile input2
+
+    let (labels, xs) = unzip $ map unzip $ groupBy ((==) `on` (fst.fst)) $ sort $
+            HM.toList $ HM.intersectionWith (,) rank expr
+        rowlab = map (B.unpack . CI.original) $ fst $ unzip $ map head labels
+        collab = map (B.unpack . CI.original) $ snd $ unzip $ head $ labels
+    return $ filterRows f $ Table rowlab collab $ M.fromLists xs
+  where
+    f (_, xs) = V.any (>1e-4) xs' && case () of
+        _ | n >= 5 -> let (m, v) = meanVarianceUnb $ fst $ V.unzip xs
+                      in sqrt v / m > 1
+          | otherwise -> V.maximum xs' / V.minimum xs' >= 2.5
+      where
+        n = V.length xs
+        xs' = fst $ V.unzip xs
+
+readTSV :: B.ByteString -> HM.HashMap (CI.CI B.ByteString, CI.CI B.ByteString) Double
+readTSV input = HM.fromList $ concatMap (f . B.split '\t') content
   where
     f (x:xs) = zipWith (\s v -> ((CI.mk x, CI.mk s), readDouble v)) samples xs
     (header:content) = B.lines input
@@ -61,8 +87,19 @@ pValueGaussian :: U.Vector Double -> U.Vector Double
 pValueGaussian xs = U.map (complCumulative distribution) xs
   where
     distribution = normalDistr m $ sqrt v
-    (m, v) = meanVarianceUnb $ U.take n $ sort xs
-    n = truncate $ fromIntegral (U.length xs) * 0.9
+    (m, v) = meanVarianceUnb $ U.take n $ S.sort xs
+    n = truncate $ fromIntegral (U.length xs) * 0.8
+
+pooledPValue :: [Int] -> U.Vector Double -> U.Vector Double
+pooledPValue groups xs
+    | sum groups /= U.length xs = error "Group assignment error"
+    | otherwise = U.fromList $ concat $ zipWith replicate groups $ U.toList $
+        U.map (complCumulative (normalFromSample dat)) dat
+  where
+    dat = U.fromList $ f groups xs
+    f (i:rest) x = mean (U.take i x) : f rest (U.drop i x)
+    f _ _ = []
+
 
 orderByName :: [String] -> ReodrderFn a
 orderByName prefix = sortBy $ \(a,_) (b,_) ->

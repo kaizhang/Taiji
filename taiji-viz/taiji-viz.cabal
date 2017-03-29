@@ -15,10 +15,11 @@ cabal-version:       >=1.10
 executable taiji-viz
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
+  ghc-options:         -threaded -Wall
 
   other-modules:
     Taiji.Visualize
+    Taiji.Visualize.Data
 
   build-depends:
       base
@@ -30,12 +31,13 @@ executable taiji-viz
     , clustering
     , diagrams-core
     , diagrams-lib
-    , diagrams-rasterific
+    , diagrams-cairo
     , matrices
     , optparse-applicative
     , statistics
     , split
     , vector
+    , SVGFonts
     , unordered-containers
 
   default-language:    Haskell2010
