@@ -3,23 +3,14 @@
 
 module Taiji.Visualize where
 
-import           Bio.Utils.Functions            (ihs', scale)
-import           Bio.Utils.Misc                 (readDouble)
-import           Control.Arrow                  (first)
-import qualified Data.ByteString.Char8          as B
-import           Data.ByteString.Lex.Fractional
-import qualified Data.CaseInsensitive           as CI
-import           Data.Colour                    (blend)
-import qualified Data.HashMap.Strict            as M
-import           Data.List.Split                (chunksOf)
-import qualified Data.Matrix                    as M
-import           Data.Maybe
-import qualified Data.Vector                    as V
-import qualified Data.Vector.Generic            as G
-import           Diagrams.Backend.Cairo         (B)
-import           Diagrams.Prelude               hiding (scale)
-import           Diagrams.TwoD.Text
-import           Graphics.SVGFonts              (textSVG)
+import           Bio.Utils.Functions    (ihs')
+import           Control.Arrow          (first)
+import           Data.Colour            (blend)
+import qualified Data.Matrix            as M
+import qualified Data.Vector            as V
+import           Diagrams.Backend.Cairo (B)
+import           Diagrams.Prelude
+import           Graphics.SVGFonts      (textSVG)
 
 import           Taiji.Visualize.Data
 

@@ -32,12 +32,11 @@ builder :: Builder ()
 builder = do
     node "Initialization" [| \() -> do
         dat <- mkAllDirs >> mkIndices >> readData
-        case validateData dat of
+        case isGroupComplete dat of
             Left x  -> error x
             Right _ -> return dat
         |] $ do label .= "Initialization"
                 stateful .= True
-
 
 -- | Create directories
 mkAllDirs :: ProcState ()
@@ -103,8 +102,12 @@ readData = do
             Nothing  -> error "Unable to read input file. Formatting error!"
             Just dat -> return $ M.fromList $ map (first mk) $ M.toList dat
 
-validateData :: InputData -> Either String ()
-validateData (atac, chip, rna, hic) = foldl' f (Right ()) counts
+--------------------------------------------------------------------------------
+-- Checking common errors for input data
+--------------------------------------------------------------------------------
+
+isGroupComplete :: InputData -> Either String ()
+isGroupComplete (atac, chip, rna, hic) = foldl' f (Right ()) counts
   where
     f (Left x) _ = Left x
     f (Right ()) (x,c)
@@ -115,3 +118,18 @@ validateData (atac, chip, rna, hic) = foldl' f (Right ()) counts
     nExps = length groupNames
     groupNames = filter (not . null) [ map (^.groupName) atac
         , map (^.groupName) chip, map (^.groupName) rna, map (^.groupName) hic ]
+
+{-
+isGroupIdUnique :: InputData -> Either String ()
+isGroupIdUnique (atac, chip, rna, hic) = foldl' f (Right ()) counts
+  where
+    f (Left x) _ = Left x
+    f (Right ()) (x,c)
+        | c < nExps = Left $ printf
+            "Missing Group %s in some experiments. Please check your inputs." (T.unpack x)
+        | otherwise = Right ()
+    counts = M.toList $ M.fromListWith (+) $ zip (map fromJust $ concat groupNames) $ repeat 1
+    nExps = length groupNames
+    groupNames = filter (not . null) [ map (^.groupName) atac
+        , map (^.groupName) chip, map (^.groupName) rna, map (^.groupName) hic ]
+        -}

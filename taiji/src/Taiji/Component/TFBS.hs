@@ -35,11 +35,11 @@ builder = do
 
         motifFile <- getConfig' "motifFile"
         motifs <- liftIO $ readMEME motifFile
-        return $ ContextData openChromatin $ zip [1..] $ chunksOf 200 motifs
+        return $ ContextData openChromatin $ zip [1..] $ chunksOf 100 motifs
         |] $ stateful .= True >> submitToRemote .= Just False
 
     node "Find_TF_sites" [| \(ContextData openChromatin (idx, motifs)) -> do
-        let p = 1e-5
+        let p = 1e-4
         output <- (++ ("/tmp." ++ show (idx::Int))) <$> tfbsOutput
         genome <- getConfig' "seqIndex"
         liftIO $ withGenome genome $ \g ->

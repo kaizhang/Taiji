@@ -18,7 +18,7 @@ packages:
         commit: a623a91c9829208c2d98d69e77827f7e975e7136
 
 extra-deps:
-    - haskell-igraph-0.2.2
+    - haskell-igraph-0.3.0
     - hexpat-0.20.9
     - List-0.5.2
     - drmaa-0.2.0

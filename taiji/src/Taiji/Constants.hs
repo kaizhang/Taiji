@@ -23,3 +23,10 @@ bwaIndex = (++ "/genome.fa") <$> getConfig' "bwaIndex"
 
 rsemIndex :: ProcState (Maybe FilePath)
 rsemIndex = fmap (++ "/genome") <$> getConfigMaybe' "rsemIndex"
+
+remoteTmpDir :: ProcState FilePath
+remoteTmpDir = do
+    tmp <- getConfigMaybe' "remoteTmpDir"
+    return $ case tmp of
+        Nothing -> "./"
+        Just x -> x

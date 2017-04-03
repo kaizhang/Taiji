@@ -35,7 +35,6 @@ executable taiji-viz
     , matrices
     , optparse-applicative
     , statistics
-    , split
     , vector
     , SVGFonts
     , unordered-containers

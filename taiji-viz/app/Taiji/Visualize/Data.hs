@@ -15,7 +15,6 @@ import           Data.List                      (groupBy, isPrefixOf, sort,
 import qualified Data.Matrix                    as M
 import           Data.Maybe
 import qualified Data.Vector                    as V
-import qualified Data.Vector.Generic            as G
 import qualified Data.Vector.Unboxed            as U
 import           Statistics.Distribution        (complCumulative)
 import           Statistics.Distribution.Normal (normalDistr, normalFromSample)
