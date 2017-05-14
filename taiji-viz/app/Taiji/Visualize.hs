@@ -33,9 +33,7 @@ spotPlot cutoff (Table rowlab collab xs)
   where
     header = alignR $ hsep 1 $ map (\x ->
         (alignB $ textBounded x # rotate (90 @@ deg)) <> box) collab
-    mkCircle (x, y, p)
-        | p <= cutoff = withEnvelope box $ circle y # lw 0 # fc (blend x red white) # showOrigin
-        | otherwise = withEnvelope box $ circle y # lw 0 # fc (blend x red white)
+    mkCircle (x, y, p) = withEnvelope box $ circle y # lw 0 # fc (blend x red white)
     g lab x = alignR $ textBounded lab ||| strutX 5 ||| x
     box = circle 15 # lw 0 :: Diagram B
     expr' = M.fromVector (M.dim expr) $ linearMap (4, 16) $ M.flatten expr

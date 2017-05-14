@@ -22,6 +22,7 @@ data Options = Options
     , colNamesFilter :: Maybe FilePath
     , expression     :: FilePath
     , pValue         :: Double
+    , cv             :: Double
     }
 
 parser :: Parser Options
@@ -41,10 +42,16 @@ parser = Options
      <> value 1e-5
      <> help "P-value for calling cell-type-specific TFs. (default: 1e-5)"
       )
+    <*> option auto
+      ( long "cv"
+     <> value 1
+     <> help "TFs with coefficient of variance less than the specified value will be removed. (default: 1)"
+      )
 
 defaultMain :: Options -> IO ()
 defaultMain opts = do
-    Table r c oriData <- fmap colReorder $ readData (input opts) $ expression opts
+    Table r c oriData <- fmap colReorder $
+        readData (input opts) (expression opts) defaultDataFiltOpts {coefficientOfVariance=cv opts}
 
     {-
     let pvalues = M.fromRows $ map (G.convert . pooledPValue grps . G.convert) $
@@ -64,8 +71,7 @@ defaultMain opts = do
             names <- lines <$> readFile fl
             return $ filterRows (filterByName names) dataTable
 
-    let table' = rowReorder $
-            filterRows (V.any ((<=0.01) . snd) . snd) $ dataTable'
+    let table' = rowReorder dataTable'
         -- let table' = reorderColumns (sortBy (comparing (last . splitOn "_" . fst))) $
         w = width dia
         h = height dia
