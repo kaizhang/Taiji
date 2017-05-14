@@ -64,7 +64,7 @@ readData :: FilePath   -- ^ PageRank
          -> DataFiltOpts
          -> IO (Table (Double, Double))  -- ^ ranks, expression and p-values
 readData input1 input2 opts = do
-    rank <- (fmap ihs' . readTSV) <$> B.readFile input1
+    rank <- readTSV <$> B.readFile input1
     expr <- (fmap ihs' . readTSV) <$> B.readFile input2
 
     let (labels, xs) = unzip $ map unzip $ groupBy ((==) `on` (fst.fst)) $ sort $
