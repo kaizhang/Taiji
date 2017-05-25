@@ -36,10 +36,13 @@ builder = do
         motifFile <- getConfig' "motifFile"
         motifs <- liftIO $ readMEME motifFile
         return $ ContextData openChromatin $ zip [1..] $ chunksOf 100 motifs
-        |] $ stateful .= True >> submitToRemote .= Just False
+        |] $ do
+            stateful .= True
+            submitToRemote .= Just False
+            note .= "Prepare for TFBS identification."
 
     node "Find_TF_sites" [| \(ContextData openChromatin (idx, motifs)) -> do
-        let p = 1e-4
+        let p = 1e-5
         output <- (++ ("/tmp." ++ show (idx::Int))) <$> tfbsOutput
         genome <- getConfig' "seqIndex"
         liftIO $ withGenome genome $ \g ->
@@ -47,14 +50,21 @@ builder = do
             motifScan g motifs def p =$= getMotifScore g motifs def =$=
             getMotifPValue (Just (1 - p * 10)) motifs def $$ writeBed output
         return output
-        |] $ stateful .= True >> batch .= 1
+        |] $ do
+            stateful .= True
+            batch .= 1
+            note .= "Search for TFBSs using FIMO's algorithm with p-value 1e-5 in open chromatin regions from all samples."
     node "Find_TF_sites_merge" [| \xs -> do
         output <- (++ "/TFBS_open_chromatin_union.bed") <$> tfbsOutput
         liftIO $ do
             runResourceT $ mapM_ sourceFileBS xs $$ sinkFile output
             shelly $ mapM_ (rm . fromText . T.pack) xs
         return output
-        |] $ stateful .= True >> submitToRemote .= Just False
+        |] $ do
+            stateful .= True
+            submitToRemote .= Just False
+            note .= "Merge and save all TFBSs to a single file."
+
     path [ "ATAC_callpeaks", "Find_TF_sites_prepare", "Find_TF_sites"
          , "Find_TF_sites_merge" ]
 
@@ -67,5 +77,7 @@ builder = do
             peaks <- readBed' fl :: IO [BED3]
             (readBed tfbs :: Source IO BED) =$= intersectBed peaks $$
                 writeBed output
-        |] $ stateful .= True
+        |] $ do
+            stateful .= True
+            note .= "Output TFBSs for each sample."
     ["ATAC_callpeaks", "Find_TF_sites_merge"] ~> "Output_TF_sites"

@@ -51,24 +51,35 @@ builder = do
             peaks <- readBed' tmp :: IO [BED3]
             genes <- gencodeActiveGenes anno peaks
             return (e^.eid, genes)
-        |] $ batch .= 1 >> stateful .= True
+        |] $ do
+            batch .= 1
+            stateful .= True
+            note .= "Identify active promoters by overlapping annotated promoter regions with active chromatin."
     path ["ATAC_combine_reps", "ATAC_find_active_promoter"]
 
     node "Link_TF_gene_prepare" [| \(promoters, oriInput, peaks, tfbs) -> do
         let hic = M.fromList $ map (\x -> (x^.groupName, x)) $ oriInput^._4
         return $ ContextData tfbs $ flip map peaks $ \p ->
             (p, M.lookup (p^.groupName) hic, fromJust $ lookup (p^.eid) promoters)
-        |] $ submitToRemote .= Just False
+        |] $ do
+            submitToRemote .= Just False
+            note .= "Prepare for linking TFs and genes."
     [ "ATAC_find_active_promoter", "Initialization", "ATAC_callpeaks"
         , "Find_TF_sites_merge" ] ~> "Link_TF_gene_prepare"
 
     node "Link_TF_gene" [| \(ContextData tfbs (peak, hic, promoters)) ->
         linkGeneToTFs <$> netOutput <*> return tfbs <*> return peak <*>
             return hic <*> return promoters >>= liftIO
-        |] $ batch .= 1 >> stateful .= True
+        |] $ do
+            batch .= 1
+            stateful .= True
+            note .= "First link TFs to enhancers and promoters, and then link to genes according to enhancer-gene and promoter-gene assignments."
     node "Output_network" [| \x -> printEdgeList <$> netOutput <*>
         return x >>= liftIO
-        |] $ batch .= 1 >> stateful .= True
+        |] $ do
+            batch .= 1
+            stateful .= True
+            note .= "Save network structures to files."
     path ["Link_TF_gene_prepare", "Link_TF_gene", "Output_network"]
 
 linkGeneToTFs :: FilePath   -- ^ Output dir

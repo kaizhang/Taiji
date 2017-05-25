@@ -35,8 +35,8 @@ builder = do
         case isGroupComplete dat of
             Left x  -> error x
             Right _ -> return dat
-        |] $ do label .= "Initialization"
-                stateful .= True
+        |] $ do stateful .= True
+                note .= "Create output directories; Make genome indices; Read input data."
 
 -- | Create directories
 mkAllDirs :: ProcState ()

@@ -42,11 +42,15 @@ builder = do
             rnaseqData <- readExpression e
             return $ flip map exps $ \x ->
                 (fmap M.toList $ lookup (B.pack $ T.unpack $ fromJust $ x^.groupName) rnaseqData, x)
-        |] $ submitToRemote .= Just False
+        |] $ do
+            submitToRemote .= Just False
+            note .= "Prepare to run PageRank algorithm."
     node "PageRank" [| \(gene_expr, e) -> do
         r <- pageRank (fmap M.fromList gene_expr) e
         return (fromJust $ e^.groupName, r)
-        |] $ batch .= 1
+        |] $ do
+            batch .= 1
+            note .= "Running personalized Pagerank algorithm."
     node "Output_ranks" [| \results -> do
         let genes = nubSort $ concatMap (fst . unzip) $ snd $ unzip results
             (groupNames, ranks) = unzip $ flip map results $ \(name, xs) ->
@@ -56,7 +60,10 @@ builder = do
 
         dir <- rankOutput
         liftIO $ outputData dir dataTable $ getMetrics dataTable
-        |] $ submitToRemote .= Just False >> stateful .= True
+        |] $ do
+            submitToRemote .= Just False
+            stateful .= True
+            note .= "Save TF ranks to files."
     ["Link_TF_gene", "Output_expression"] ~> "PageRank_prepare"
     path ["PageRank_prepare", "PageRank", "Output_ranks"]
 

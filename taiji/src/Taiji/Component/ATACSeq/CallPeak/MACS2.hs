@@ -18,7 +18,9 @@ import           Taiji.Constants
 
 builder :: Builder ()
 builder = do
-    node "ATAC_MACS_prepare" [| return . mergeExps |] $ submitToRemote .= Just False
+    node "ATAC_MACS_prepare" [| return . mergeExps |] $ do
+        submitToRemote .= Just False
+        note .= "Prepare for MACS2 peak calling."
 
     node "ATAC_callpeaks" [| mapOfFiles $ \e r fl -> do
         dir <- atacOutput
@@ -29,5 +31,8 @@ builder = do
                         (T.unpack $ e^.eid) (r^.number)
                 result <- liftIO $ callPeaks output fl Nothing $ pair .= pairedEnd e
                 return [result]
-        |] $ batch .= 1 >> stateful .= True
+        |] $ do
+            batch .= 1
+            stateful .= True
+            note .= "Call narrow peaks using MACS2. Default options: \"--qvalue 0.01 --keep-dup all\"."
     path ["ATAC_callpeaks_prepare", "ATAC_MACS_prepare", "ATAC_callpeaks"]
