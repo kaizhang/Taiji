@@ -62,7 +62,7 @@ defaultDataFiltOpts = DataFiltOpts
 readData :: FilePath   -- ^ PageRank
          -> FilePath   -- ^ Gene expression
          -> DataFiltOpts
-         -> IO (Table (Double, Double))  -- ^ ranks, expression and p-values
+         -> IO (Table (Double, Double))  -- ^ ranks, expression
 readData input1 input2 opts = do
     rank <- readTSV <$> B.readFile input1
     expr <- (fmap ihs' . readTSV) <$> B.readFile input2

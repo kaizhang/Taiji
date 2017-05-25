@@ -30,9 +30,13 @@ import           Taiji.Constants
 
 builder :: Builder ()
 builder = do
-    node "Get_RNA_data" [| return . (^._3) |] $ do
-        submitToRemote .= Just False
-        label .= "Get RNA-seq data"
+    node "Get_RNA_data" [| \input -> do
+        dir <- downloadOutput
+        liftIO $ mapM (sra2fastq dir) $ input^._3
+        |] $ do
+            submitToRemote .= Just False
+            stateful .= True
+            label .= "Get RNA-seq data"
     node "RNA_alignment_prepare" [| \input ->
         return $ concatMap splitExpByFile $ filterExpByFile
             (\x -> formatIs FastqFile x || formatIs FastqGZip x) input

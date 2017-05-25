@@ -1,0 +1,13 @@
+- id: test01
+  group: test01
+  celltype: test
+  target: test
+  replicates:
+      - rep: 1
+        files:
+            - path: "xxx.bed"
+      - rep: 2
+        files:
+            - pair:
+                - path: "xx1.bed"
+                - path: "xx2.bed"

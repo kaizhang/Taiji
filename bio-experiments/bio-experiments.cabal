@@ -1,0 +1,59 @@
+name:                bio-experiments
+version:             0.1.0
+synopsis:            Types for storing metadata of experiments
+description:         Please see README.md
+homepage:
+license:             BSD3
+license-file:        LICENSE
+author:              Kai Zhang
+maintainer:          kai@kzhang.org
+copyright:           2016 Kai Zhang
+category:            Bio
+build-type:          Simple
+cabal-version:       >=1.10
+data-files:
+  tests/test.yml
+
+library
+  hs-source-dirs:      src
+  ghc-options: -Wall
+
+  exposed-modules:
+    Bio.Data.Experiment.Parser
+    Bio.Data.Experiment.Types
+    Bio.Data.Experiment.Types.Internal
+    Bio.Data.Experiment.Utils
+
+  build-depends:
+      base >= 4.0 && < 5
+    , aeson
+    , bytestring
+    , cereal
+    , containers
+    , data-ordlist
+    , text
+    , unordered-containers
+    , lens
+    , yaml
+    , vector
+
+  default-language:    Haskell2010
+
+test-suite tests
+  type: exitcode-stdio-1.0
+  hs-source-dirs: tests
+  main-is: tests.hs
+
+  default-language:    Haskell2010
+  build-depends:
+      base
+    , bio-experiments
+    , containers
+    , lens
+    , tasty
+    , tasty-hunit
+    , yaml
+
+source-repository head
+  type:     git
+  location: https://github.com/kaizhang/bio-experiments.git

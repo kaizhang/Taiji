@@ -15,6 +15,10 @@ import           Options.Applicative
 import           Taiji.Visualize
 import           Taiji.Visualize.Data
 
+import qualified Data.ByteString.Char8 as B
+import Data.List (intercalate)
+import Control.Monad
+
 data Options = Options
     { input          :: FilePath
     , output         :: FilePath
@@ -78,6 +82,11 @@ defaultMain opts = do
         n = fromIntegral $ M.cols (matrix table') * 50
         dia = spotPlot (pValue opts) table'
     renderCairo (output opts) (dims2D n (n*(h/w))) dia
+
+    -- Output processed data table
+    B.putStrLn $ B.pack $ intercalate "\t" $ "TF" : colNames table'
+    forM_ (zip (rowNames table') $ M.toLists $ matrix table') $ \(x,y) -> do
+        B.putStrLn $ B.pack $ intercalate "\t" $ x : map (show . fst . fst) y
   where
     colReorder = reorderColumns (orderByName ["neural-tube", "forebrain", "midbrain", "hindbrain", "heart", "intestine", "kidney", "limb", "liver", "lung", "stomach"])
     rowReorder = reorderRows (\x -> flatten $ hclust Ward (V.fromList x) distFn)

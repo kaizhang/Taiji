@@ -19,9 +19,13 @@ import           Taiji.Constants
 
 builder :: Builder ()
 builder = do
-    node "Get_ATAC_data" [| return . (^._1) |] $ do
-        submitToRemote .= Just False
-        label .= "Get ATAC-seq data"
+    node "Get_ATAC_data" [| \input -> do
+        dir <- downloadOutput
+        liftIO $ mapM (sra2fastq dir) $ input^._1
+        |] $ do
+            submitToRemote .= Just False
+            stateful .= True
+            label .= "Get ATAC-seq data"
     path ["Initialization", "Get_ATAC_data"]
 
     node "ATAC_alignment_prepare" [| \input ->

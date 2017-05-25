@@ -41,6 +41,7 @@ library
     , matrices >=0.4.4
     , text
     , temporary
+    , split
     , shelly
     , vector
     , cereal-vector

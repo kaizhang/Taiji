@@ -3,6 +3,9 @@ module Taiji.Constants where
 
 import           Scientific.Workflow (ProcState, getConfig', getConfigMaybe')
 
+downloadOutput :: ProcState FilePath
+downloadOutput = (++ "/download/") <$> getConfig' "outputDir"
+
 atacOutput :: ProcState FilePath
 atacOutput = (++ "/ATAC_Seq/") <$> getConfig' "outputDir"
 
