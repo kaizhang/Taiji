@@ -179,17 +179,14 @@ bwaAlign dir index setter = mapOfFiles fn
             stats <- withTempDirectory (opt^.bwaTmpDir) "bwa_align_tmp_dir." $
                 \tmpdir -> shelly $ escaping False $ do
                     let tmp_sai = T.pack $ tmpdir ++ "/tmp.sai"
-                        tmp_sort_bam = T.pack $ tmpdir ++ "/sort_bam_tmp"
                     -- Align reads and save the results to tmp_sai.
                     cmd "bwa" "aln" "-q" (T.pack $ show $ opt^.bwaReadTrim) "-l"
                         (T.pack $ show $ opt^.bwaSeedLen) "-k"
                         (T.pack $ show $ opt^.bwaMaxMis) "-t"
                         (T.pack $ show $ opt^.bwaCores) (T.pack index) input ">" tmp_sai
-                    -- Convert sai to sorted bam.
+                    -- Convert sai to bam.
                     cmd "bwa" "samse"  (T.pack index) tmp_sai input "|"
-                        "samtools" "view" "-Su" "-" "|" "samtools" "sort" "-" "-@"
-                        (T.pack $ show $ opt^.bwaCores) "-o" (T.pack output)
-                        "-T" tmp_sort_bam
+                        "samtools" "view" "-Su" "-" ">" (T.pack output)
 
             return [ Single $ format .~ BamFile $
                               location .~ output $ fl
@@ -205,18 +202,11 @@ bwaAlign dir index setter = mapOfFiles fn
                     input1 = T.pack $ f1^.location
                     input2 = T.pack $ f2^.location
 
-                stats <- withTempDirectory (opt^.bwaTmpDir) "bwa_align_tmp_dir." $
-                    \tmpdir -> shelly $ escaping False $ do
-                        let tmp_sort_bam = T.pack $ tmpdir ++ "/sort_bam_tmp"
-                        -- Align reads and save the results to tmp_sai.
-                        cmd "bwa" "mem" "-M" "-k"
-                            (T.pack $ show $ opt^.bwaSeedLen) "-t"
-                            (T.pack $ show $ opt^.bwaCores) (T.pack index)
-                            input1 input2 "|" "samtools" "view" "-Su" "-" "|"
-                            "samtools" "sort" "-" "-@"
-                            (T.pack $ show $ opt^.bwaCores) "-o"
-                            (T.pack $ output) "-T" tmp_sort_bam
-
+                stats <- shelly $ escaping False $
+                    cmd "bwa" "mem" "-M" "-k" (T.pack $ show $ opt^.bwaSeedLen)
+                        "-t" (T.pack $ show $ opt^.bwaCores) (T.pack index)
+                        input1 input2 "|" "samtools" "view" "-Su" "-" ">"
+                        (T.pack $ output)
                 return [ Single $ format .~ BamFile $
                                   location .~ output $ f1
                        ]
@@ -244,21 +234,19 @@ filterBam dir = mapOfFiles fn
         shelly $ escaping False $ silently $ do
             let tmp_filt = T.pack $ tmp ++ "/tmp_filt.bam"
                 tmp_fixmate = T.pack $ tmp ++ "/tmp_fixmate.bam"
-                tmpOutput | isPair = [ "|", "samtools", "sort", "-", "-n"
-                    , "-T", T.pack tmp, "-o", tmp_filt ]
-                          | otherwise = [">", output]
-            run_ "samtools" $ ["view"] ++ outputMode ++
-                ["-F", "0x70c", "-q", "30"] ++ compression ++ [input] ++
-                tmpOutput
+            run_ "samtools" $ ["view"] ++
+                (if isPair then ["-f", "2"] else []) ++
+                ["-F", "0x70c", "-q", "30", "-u", input] ++
+                ( if isPair
+                    then [ "|", "samtools", "sort", "-", "-n", "-T", T.pack tmp
+                        , "-l", "0", "-o", tmp_filt ]
+                    else [ "|", "samtools", "sort", "-", "-T", T.pack tmp
+                        , "-l", "9", "-o", output ] )
             when isPair $ do
                 run_ "samtools" ["fixmate", "-r", tmp_filt, tmp_fixmate]
                 run_ "samtools" [ "view", "-F", "1804", "-f", "2", "-u"
-                    , tmp_fixmate, "|", "samtools", "sort", "-", "-T", T.pack tmp
-                    , "-o", output ]
-
-      where
-        outputMode = if isPair then ["-f", "2"] else []
-        compression = if isPair then ["-u"] else ["-b"]
+                    , tmp_fixmate, "|", "samtools", "sort", "-", "-T"
+                    , T.pack tmp, "-l", "9", "-o", output ]
 
 -- | Remove duplicates
 removeDuplicates :: (NGS e, IsDNASeq e, Experiment e)
