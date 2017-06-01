@@ -234,19 +234,20 @@ filterBam dir = mapOfFiles fn
         shelly $ escaping False $ silently $ do
             let tmp_filt = T.pack $ tmp ++ "/tmp_filt.bam"
                 tmp_fixmate = T.pack $ tmp ++ "/tmp_fixmate.bam"
+                tmp_sort = T.pack $ tmp ++ "/tmp_sort"
             run_ "samtools" $ ["view"] ++
                 (if isPair then ["-f", "2"] else []) ++
                 ["-F", "0x70c", "-q", "30", "-u", input] ++
                 ( if isPair
-                    then [ "|", "samtools", "sort", "-", "-n", "-T", T.pack tmp
+                    then [ "|", "samtools", "sort", "-", "-n", "-T", tmp_sort
                         , "-l", "0", "-o", tmp_filt ]
-                    else [ "|", "samtools", "sort", "-", "-T", T.pack tmp
+                    else [ "|", "samtools", "sort", "-", "-T", tmp_sort
                         , "-l", "9", "-o", output ] )
             when isPair $ do
                 run_ "samtools" ["fixmate", "-r", tmp_filt, tmp_fixmate]
                 run_ "samtools" [ "view", "-F", "1804", "-f", "2", "-u"
                     , tmp_fixmate, "|", "samtools", "sort", "-", "-T"
-                    , T.pack tmp, "-l", "9", "-o", output ]
+                    , tmp_sort, "-l", "9", "-o", output ]
 
 -- | Remove duplicates
 removeDuplicates :: (NGS e, IsDNASeq e, Experiment e)
@@ -279,8 +280,8 @@ removeDuplicates picardPath dir = mapOfFiles fn
 
                 -- Re-sort by names for pairedend sequencing
                 if pairedEnd e
-                    then run_ "samtools" [ "sort", T.pack filtTmp, "-n"
-                        , "-T", T.pack tmp, "-o", T.pack output ]
+                    then run_ "samtools" [ "sort", T.pack filtTmp, "-n", "-T"
+                        , T.pack $ tmp ++ "/tmp_sort", "-o", T.pack output ]
                     else mv (fromText $ T.pack filtTmp) $ fromText $ T.pack output
 
                 let finalBam = format .~ BamFile $

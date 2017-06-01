@@ -48,7 +48,8 @@ builder = do
         |] $ do
             batch .= 1
             stateful .= True
-            remoteParam .= "-l vmem=10G -pe smp 4"
+            -- remoteParam .= "-l vmem=10G -pe smp 4"
+            remoteParam .= "--ntasks-per-node=4 --mem=40000 -p gpu"
             note .= "Align RNA-seq data using STAR. Default options: same as ENCODE."
     node "RNA_quantification" [| \x -> rsemQuant <$> rnaOutput <*>
             fmap fromJust rsemIndex <*> return (rsemCores .= 4) <*>
@@ -56,7 +57,8 @@ builder = do
         |] $ do
             batch .= 1
             stateful .= True
-            remoteParam .= "-l vmem=10G -pe smp 4"
+            -- remoteParam .= "-l vmem=10G -pe smp 4"
+            remoteParam .= "--ntasks-per-node=4 --mem=40000 -p gpu"
             note .= "Perform gene and transcript quantification using RSEM."
     node "RNA_convert_ID_to_name" [| \x -> geneId2Name <$> rnaOutput <*>
             getConfig' "annotation" <*> return x >>= liftIO

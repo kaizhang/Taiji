@@ -39,7 +39,8 @@ builder = do
         |] $ do
             batch .= 1
             stateful .= True
-            remoteParam .= "-pe smp 4"
+            -- remoteParam .= "-pe smp 4"
+            remoteParam .= "--ntasks-per-node=4"
             note .= "Use BWA to align ATAC-seq data. Default options: \"-l 32 -k 2 -q 5\"."
     path [ "Get_ATAC_data", "ATAC_alignment_prepare", "ATAC_alignment"]
 
