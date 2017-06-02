@@ -57,14 +57,18 @@ builder = do
             note .= "Identify active promoters by overlapping annotated promoter regions with active chromatin."
     path ["ATAC_combine_reps", "ATAC_find_active_promoter"]
 
-    node "Link_TF_gene_prepare" [| \(promoters, oriInput, peaks, tfbs) -> do
-        let hic = M.fromList $ map (\x -> (x^.groupName, x)) $ oriInput^._4
+    node "Get_HiC" [| \input -> return $ input^._4 |] $ do
+        submitToRemote .= Just False
+        note .= "Extract HiC data."
+    node "Link_TF_gene_prepare" [| \(promoters, hic', peaks, tfbs) -> do
+        let hic = M.fromList $ map (\x -> (x^.groupName, x)) hic'
         return $ ContextData tfbs $ flip map peaks $ \p ->
             (p, M.lookup (p^.groupName) hic, fromJust $ lookup (p^.eid) promoters)
         |] $ do
             submitToRemote .= Just False
             note .= "Prepare for linking TFs and genes."
-    [ "ATAC_find_active_promoter", "Initialization", "ATAC_callpeaks"
+    ["Initialization"] ~> "Get_HiC"
+    [ "ATAC_find_active_promoter", "Get_HiC", "ATAC_callpeaks"
         , "Find_TF_sites_merge" ] ~> "Link_TF_gene_prepare"
 
     node "Link_TF_gene" [| \(ContextData tfbs (peak, hic, promoters)) ->

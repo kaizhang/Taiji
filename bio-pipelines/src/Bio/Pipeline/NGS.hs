@@ -260,7 +260,8 @@ removeDuplicates picardPath dir = mapOfFiles fn
             let output = printf "%s/%s_rep%d_filt_mono.bam" dir
                     (T.unpack $ e^.eid) (r^.number)
                 input = fl^.location
-                qcFile = printf ("%s/%s_picard.qc") dir (T.unpack $ e^.eid)
+                qcFile = printf ("%s/%s_rep%d_picard.qc") dir
+                    (T.unpack $ e^.eid) (r^.number)
 
             withTempDirectory "./" "tmp_picard_dir." $ \tmp -> shelly $ do
                 let markdupTmp = tmp++"/dup_marked.bam"
