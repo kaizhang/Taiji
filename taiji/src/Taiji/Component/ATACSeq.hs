@@ -7,6 +7,7 @@
 
 module Taiji.Component.ATACSeq (builder) where
 
+import           Bio.Data.Bed              (chrom, chromStart, chromEnd)
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.NGS
@@ -80,8 +81,10 @@ builder = do
         let processWith f = replicates.traverse %%~
                 id files (fmap catMaybes . mapM (f prefix)) $ e
         liftIO $ if pairedEnd e
-            then processWith sortedBam2BedPE
-            else processWith bam2Bed
+            then processWith ( \x -> sortedBam2BedPE x
+                (\(a,b) -> abs (chromStart a - chromEnd b) < 5000 &&
+                chrom a /= "chrM" && chrom b /= "chrM") )
+            else processWith (\x -> bam2Bed x ((/="chrM") . chrom))
         |] $ do
             batch .= 1
             stateful .= True

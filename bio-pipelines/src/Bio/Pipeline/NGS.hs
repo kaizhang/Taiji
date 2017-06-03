@@ -42,7 +42,7 @@ module Bio.Pipeline.NGS
 
 import           Bio.Data.Bam              (bamToBed, readBam, runBam,
                                             sortedBamToBedPE)
-import           Bio.Data.Bed              (BED3 (..), BEDLike (..), toLine)
+import           Bio.Data.Bed              (BED, BED3 (..), BEDLike (..), toLine)
 import           Bio.Data.Experiment.Types
 import           Conduit
 import           Control.Lens
@@ -297,29 +297,33 @@ removeDuplicates picardPath dir = mapOfFiles fn
         else return []
     fn _ _ _ = return []
 
-bam2Bed :: String -> FileSet -> IO (Maybe FileSet)
-bam2Bed prefix (Single fl)
+bam2Bed :: String    -- ^ Prefix
+        -> (BED -> Bool)  -- ^ Filtering function
+        -> FileSet -> IO (Maybe FileSet)
+bam2Bed prefix fn (Single fl)
     | fl^.format == BamFile = do
         shelly $ mkdir_p $ fromText $ T.pack $ takeDirectory prefix
         let output = prefix ++ takeBaseName (fl^.location) ++ ".bed.gz"
             bedFile = format .~ BedGZip $
                       location .~ output $ fl
-        runBam $ readBam (fl^.location) =$= bamToBed =$= mapC toLine =$=
-            unlinesAsciiC =$= gzip $$ sinkFileBS output
+        runBam $ readBam (fl^.location) =$= bamToBed =$= filterC fn =$=
+            mapC toLine =$= unlinesAsciiC =$= gzip $$ sinkFileBS output
         return $ Just $ Single bedFile
     | otherwise = return Nothing
-bam2Bed _ _ = return Nothing
+bam2Bed _ _ _ = return Nothing
 {-# INLINE bam2Bed #-}
 
 -- | Convert name sorted BAM to BEDPE suitable for MACS2.
-sortedBam2BedPE :: String -> FileSet -> IO (Maybe FileSet)
-sortedBam2BedPE prefix (Single fl)
+sortedBam2BedPE :: String
+                -> ((BED, BED) -> Bool)
+                -> FileSet -> IO (Maybe FileSet)
+sortedBam2BedPE prefix fn (Single fl)
     | fl^.format == BamFile = do
         shelly $ mkdir_p $ fromText $ T.pack $ takeDirectory prefix
         let output = prefix ++ takeBaseName (fl^.location) ++ ".bed.gz"
             bedFile = format .~ BedGZip $
                       location .~ output $ fl
-        runBam $ readBam (fl^.location) =$= sortedBamToBedPE =$=
+        runBam $ readBam (fl^.location) =$= sortedBamToBedPE =$= filterC fn =$=
             concatMapC f =$= mapC toLine =$= unlinesAsciiC =$= gzip $$
             sinkFileBS output
         return $ Just $ Single bedFile
@@ -332,10 +336,10 @@ sortedBam2BedPE prefix (Single fl)
                     then chromStart b1 else chromStart b2
                 right = if not (fromJust $ bedStrand b2)
                     then chromEnd b2 else chromEnd b1
-            in if left <= right
+            in if left < right
                   then Just $ BED3 (chrom b1) left right
-                  else error "Left coordinate is smaller than right coordinate."
-sortedBam2BedPE _ _ = return Nothing
+                  else error "Left coordinate is larger than right coordinate."
+sortedBam2BedPE _ _ _ = return Nothing
 {-# INLINE sortedBam2BedPE #-}
 
 -- | Merge multiple BED files.
