@@ -27,12 +27,13 @@ import qualified Data.Text                         as T
 import           Scientific.Workflow
 
 import           Taiji.Constants
+import           Taiji.Tools
 
 builder :: Builder ()
 builder = do
     node "Get_RNA_data" [| \input -> do
         dir <- downloadOutput
-        liftIO $ mapM (sra2fastq dir) $ input^._3
+        liftIO $ mapM (downloadData dir) $ input^._3
         |] $ do
             submitToRemote .= Just False
             stateful .= True
@@ -60,18 +61,29 @@ builder = do
             -- remoteParam .= "-l vmem=10G -pe smp 4"
             remoteParam .= "--ntasks-per-node=4 --mem=40000 -p gpu"
             note .= "Perform gene and transcript quantification using RSEM."
+    path [ "Initialization", "Get_RNA_data", "RNA_alignment_prepare", "RNA_alignment"
+         , "RNA_quantification"]
+
+    node "RNA_convert_ID_prepare" [| \(oriInput, quant) -> do
+        let filt (Single fl) = "gene quantification" `elem` (fl^.tags) &&
+                "unamed" `elem` (fl^.tags)
+            filt _ = False
+        return $ mergeExps $ filterExpByFile filt oriInput ++ quant
+        |] $ do
+            submitToRemote .= Just False
     node "RNA_convert_ID_to_name" [| \x -> geneId2Name <$> rnaOutput <*>
             getConfig' "annotation" <*> return x >>= liftIO
         |] $ do
             batch .= 5
             stateful .= True
             note .= "Convert gene IDs to gene names. Multiple gene IDs can exist for a given gene name. In this case, the average was taken."
-    path [ "Initialization", "Get_RNA_data", "RNA_alignment_prepare", "RNA_alignment"
-         , "RNA_quantification", "RNA_convert_ID_to_name"]
+    ["Get_RNA_data", "RNA_quantification"] ~> "RNA_convert_ID_prepare"
+    ["RNA_convert_ID_prepare"] ~> "RNA_convert_ID_to_name"
 
     -- Gene expression profile can optionally be provided in original input data.
     node "RNA_average_prepare" [| \(oriInput, quant) -> do
-        let filt (Single fl) = "gene quantification" `elem` fl^.tags
+        let filt (Single fl) = "gene quantification" `elem` (fl^.tags) &&
+                not ("unamed" `elem` (fl^.tags))
             filt _ = False
         return $ mergeExps $ filterExpByFile filt oriInput ++ quant
         |] $ do

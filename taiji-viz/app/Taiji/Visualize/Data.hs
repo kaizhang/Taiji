@@ -52,11 +52,9 @@ reorderColumns fn table = table
     (names, cols) = unzip $ fn $ zip (colNames table) $ M.toColumns $ matrix table
 
 data DataFiltOpts = DataFiltOpts
-    { coefficientOfVariance :: Double }
-
-defaultDataFiltOpts :: DataFiltOpts
-defaultDataFiltOpts = DataFiltOpts
-    { coefficientOfVariance = 1 }
+    { coefficientOfVariance :: Double
+    , lowerBound :: Double
+    }
 
 -- | Read data, normalize and calculate p-values.
 readData :: FilePath   -- ^ PageRank
@@ -73,7 +71,7 @@ readData input1 input2 opts = do
         collab = map (B.unpack . CI.original) $ snd $ unzip $ head $ labels
     return $ filterRows f $ Table rowlab collab $ M.fromLists xs
   where
-    f (_, xs) = V.any (>1e-4) xs' && case () of
+    f (_, xs) = V.any (>(lowerBound opts)) xs' && case () of
         _ | n >= 5 -> let (m, v) = meanVarianceUnb $ fst $ V.unzip xs
                       in sqrt v / m > coefficientOfVariance opts
           | otherwise -> V.maximum xs' / V.minimum xs' >= 2.5

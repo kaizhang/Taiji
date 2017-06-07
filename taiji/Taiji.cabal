@@ -30,6 +30,7 @@ library
     Taiji.Component.Rank
     Taiji.Constants
     Taiji.Types
+    Taiji.Tools
 
   if flag(idr)
     exposed-modules: Taiji.Component.ATACSeq.CallPeak.IDR
@@ -53,6 +54,7 @@ library
     , data-default
     , hashable
     , haskell-igraph >=0.2.2
+    , http-conduit
     , IntervalMap
     , lens
     , mtl

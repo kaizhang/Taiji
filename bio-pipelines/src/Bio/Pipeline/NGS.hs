@@ -6,8 +6,7 @@
 {-# LANGUAGE TemplateHaskell      #-}
 
 module Bio.Pipeline.NGS
-    ( sra2fastq
-    , BWAOpts
+    ( BWAOpts
     , BWAOptSetter
     , bwaCores
     , bwaSeedLen
@@ -51,7 +50,6 @@ import           Control.Monad.State.Lazy
 import           Data.Conduit.Zlib         (gzip, ungzip)
 import           Data.Conduit.Zlib         (gzip)
 import           Data.Int                  (Int32)
-import           Data.List.Split           (splitOn)
 import           Data.Maybe                (fromJust)
 import qualified Data.Text                 as T
 import           Shelly                    (cmd, cp, escaping, fromText,
@@ -65,6 +63,7 @@ import           Text.Printf               (printf)
 import           Bio.Pipeline.Utils        (mapOfFiles)
 default (T.Text)
 
+{-
 -- | Convert SRA to gzipped Fastq file
 sra2fastq :: (NGS e, Experiment e)
           => FilePath
@@ -110,6 +109,7 @@ sra2fastq outDir = mapOfFiles fn
                     run_ "cat" $ f2s ++ ["|", "gzip", "-c", ">", T.pack f2_name]
                     run_ "rm" f2s
         return [Pair f1 f2]
+        -}
 
 --------------------------------------------------------------------------------
 -- DNA-seq

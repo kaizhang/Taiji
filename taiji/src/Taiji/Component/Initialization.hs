@@ -41,7 +41,7 @@ builder = do
 -- | Create directories
 mkAllDirs :: ProcState ()
 mkAllDirs = mkdir atacOutput >> mkdir netOutput >> mkdir tfbsOutput >>
-    mkdir rnaOutput >> mkdir rankOutput
+    mkdir rnaOutput >> mkdir rankOutput >> mkdir downloadOutput
   where
     mkdir x = x >>= liftIO . shelly . mkdir_p . fromText . T.pack
 

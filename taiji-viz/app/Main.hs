@@ -27,6 +27,7 @@ data Options = Options
     , expression     :: FilePath
     , pValue         :: Double
     , cv             :: Double
+    , minRank        :: Double
     }
 
 parser :: Parser Options
@@ -51,11 +52,16 @@ parser = Options
      <> value 1
      <> help "TFs with coefficient of variance less than the specified value will be removed. (default: 1)"
       )
+    <*> option auto
+      ( long "min"
+     <> value 1e-4
+     <> help "lowerBound of TF rank."
+      )
 
 defaultMain :: Options -> IO ()
 defaultMain opts = do
-    Table r c oriData <- fmap colReorder $
-        readData (input opts) (expression opts) defaultDataFiltOpts {coefficientOfVariance=cv opts}
+    Table r c oriData <- fmap colReorder $ readData (input opts)
+        (expression opts) $ DataFiltOpts (cv opts) (minRank opts)
 
     {-
     let pvalues = M.fromRows $ map (G.convert . pooledPValue grps . G.convert) $

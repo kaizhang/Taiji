@@ -7,7 +7,7 @@
 
 module Taiji.Component.ATACSeq (builder) where
 
-import           Bio.Data.Bed              (chrom, chromStart, chromEnd)
+import           Bio.Data.Bed              (chrom, chromEnd, chromStart)
 import           Bio.Data.Experiment.Types
 import           Bio.Data.Experiment.Utils
 import           Bio.Pipeline.NGS
@@ -17,12 +17,13 @@ import           Data.Maybe                (catMaybes)
 import           Scientific.Workflow
 
 import           Taiji.Constants
+import           Taiji.Tools
 
 builder :: Builder ()
 builder = do
     node "Get_ATAC_data" [| \input -> do
         dir <- downloadOutput
-        liftIO $ mapM (sra2fastq dir) $ input^._1
+        liftIO $ mapM (downloadData dir) $ input^._1
         |] $ do
             submitToRemote .= Just False
             stateful .= True

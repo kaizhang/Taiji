@@ -21,6 +21,7 @@ module Bio.Data.Experiment.Parser
     , parseRNASeq
     , parseHiC
     , parseList
+    , guessFormat
     ) where
 
 import           Control.Arrow                      (first)
