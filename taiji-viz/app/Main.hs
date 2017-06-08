@@ -63,11 +63,11 @@ defaultMain opts = do
     Table r c oriData <- fmap colReorder $ readData (input opts)
         (expression opts) $ DataFiltOpts (cv opts) (minRank opts)
 
-    {-
+        {-
     let pvalues = M.fromRows $ map (G.convert . pooledPValue grps . G.convert) $
            M.toRows $ fst $ M.unzip oriData
-        grps = [4,6,6,6,6,4,4,4,6,4,4]
-    -}
+        grps = [6, 8, 8, 8, 8, 4, 4, 6, 7, 4, 5, 4]
+        -}
 
     let pvalues = M.fromRows $ map (G.convert . pValueGaussian . G.convert) $
             M.toRows $ fst $ M.unzip oriData
@@ -90,9 +90,13 @@ defaultMain opts = do
     renderCairo (output opts) (dims2D n (n*(h/w))) dia
 
     -- Output processed data table
-    B.putStrLn $ B.pack $ intercalate "\t" $ "TF" : colNames table'
-    forM_ (zip (rowNames table') $ M.toLists $ matrix table') $ \(x,y) -> do
-        B.putStrLn $ B.pack $ intercalate "\t" $ x : map (show . fst . fst) y
+    -- B.putStrLn $ B.pack $ intercalate "\t" $ "TF" : colNames table'
+    -- forM_ (zip (rowNames table') $ M.toLists $ matrix table') $ \(x,y) -> do
+        -- B.putStrLn $ B.pack $ intercalate "\t" $ x : map (show . fst . fst) y
+    -- output pvalue
+    -- B.putStrLn $ B.pack $ intercalate "\t" $ "TF" : colNames table'
+    -- forM_ (zip (rowNames table') $ M.toLists $ matrix table') $ \(x,y) -> do
+        -- B.putStrLn $ B.pack $ intercalate "\t" $ x : map (show . snd) y
   where
     colReorder = reorderColumns (orderByName ["neural-tube", "forebrain", "midbrain", "hindbrain", "heart", "intestine", "kidney", "limb", "liver", "lung", "stomach"])
     rowReorder = reorderRows (\x -> flatten $ hclust Ward (V.fromList x) distFn)

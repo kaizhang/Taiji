@@ -65,12 +65,10 @@ builder = do
          , "RNA_quantification"]
 
     node "RNA_convert_ID_prepare" [| \(oriInput, quant) -> do
-        let filt (Single fl) = "gene quantification" `elem` (fl^.tags) &&
-                "unamed" `elem` (fl^.tags)
+        let filt (Single fl) = "gene quantification from ENCODE" `elem` (fl^.tags)
             filt _ = False
         return $ mergeExps $ filterExpByFile filt oriInput ++ quant
-        |] $ do
-            submitToRemote .= Just False
+        |] $ submitToRemote .= Just False
     node "RNA_convert_ID_to_name" [| \x -> geneId2Name <$> rnaOutput <*>
             getConfig' "annotation" <*> return x >>= liftIO
         |] $ do
@@ -82,8 +80,7 @@ builder = do
 
     -- Gene expression profile can optionally be provided in original input data.
     node "RNA_average_prepare" [| \(oriInput, quant) -> do
-        let filt (Single fl) = "gene quantification" `elem` (fl^.tags) &&
-                not ("unamed" `elem` (fl^.tags))
+        let filt (Single fl) = "gene quantification" `elem` (fl^.tags)
             filt _ = False
         return $ mergeExps $ filterExpByFile filt oriInput ++ quant
         |] $ do
@@ -125,8 +122,8 @@ geneId2Name outdir anno e = do
 
         c <- B.readFile $ fl^.location
         B.writeFile output $ B.unlines $ map ( (\xs -> B.intercalate "\t"
-            [M.lookupDefault undefined (head xs) id2Name, xs!!4]) . B.split '\t' ) $
-            tail $ B.lines c
+            [M.lookupDefault (head xs `B.append` "(inconvertible)") (head xs)
+            id2Name, xs!!4]) . B.split '\t' ) $ tail $ B.lines c
         return $ files .~ [newFile] $ r
 
     return $ replicates .~ rs $ e

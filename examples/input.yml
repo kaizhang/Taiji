@@ -1,0 +1,29 @@
+RNA-Seq:
+- group: 'embryonic facial prominence: E10.5'
+  replicates:
+  - rep:      1
+    files:
+    - path: 'ENCODE: ENCFF929KWG'
+      tags:
+      - gene quantification from ENCODE
+  - rep:      2
+    files:
+    - path: 'ENCODE: ENCFF672DDJ'
+      tags:
+      - gene quantification from ENCODE
+  id:         'embryonic facial prominence_10.5 day_RNA'
+
+ATAC-Seq:
+- group: 'embryonic facial prominence: E10.5'
+  replicates:
+  - rep:      1
+    files:
+    - path: 'ENCODE: ENCFF112HWN'
+      tags:
+      - filtered
+  - rep:      2
+    files:
+    - path: 'ENCODE: ENCFF140IYZ'
+      tags:
+      - filtered
+  id:         'embryonic facial prominence_10.5 day_H3K27ac'
