@@ -39,7 +39,7 @@ builder = do
     node "PageRank_prepare" [| \(exps, gene_expr) -> case gene_expr of
         Nothing -> return $ map (\x -> (Nothing, x)) exps
         Just e -> do
-            rnaseqData <- readExpression e
+            rnaseqData <- readExpression e 1
             return $ flip map exps $ \x ->
                 (fmap M.toList $ lookup (B.pack $ T.unpack $ fromJust $ x^.groupName) rnaseqData, x)
         |] $ do
@@ -70,10 +70,11 @@ builder = do
 
 -- | Read RNA expression data
 readExpression :: FilePath
+               -> Double    -- ^ Threshold to call a gene as non-expressed
                -> IO [( B.ByteString    -- ^ cell type
                      , M.HashMap GeneName (Double, Double)  -- ^ absolute value and z-score
                      )]
-readExpression fl = do
+readExpression fl cutoff = do
     c <- B.readFile fl
     let ((_:header):dat) = map (B.split '\t') $ B.lines c
         rowNames = map (mk . head) dat
@@ -82,7 +83,7 @@ readExpression fl = do
         transpose $ zipWith zip dataTable $ map computeZscore dataTable
   where
     computeZscore xs
-        | all (<1) xs || all (==head xs) xs = replicate (length xs) (-10)
+        | all (<cutoff) xs || all (==head xs) xs = replicate (length xs) (-10)
         | otherwise = U.toList $ scale $ U.fromList xs
 
 pageRank :: Experiment e

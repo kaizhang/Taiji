@@ -90,9 +90,9 @@ defaultMain opts = do
     renderCairo (output opts) (dims2D n (n*(h/w))) dia
 
     -- Output processed data table
-    -- B.putStrLn $ B.pack $ intercalate "\t" $ "TF" : colNames table'
-    -- forM_ (zip (rowNames table') $ M.toLists $ matrix table') $ \(x,y) -> do
-        -- B.putStrLn $ B.pack $ intercalate "\t" $ x : map (show . fst . fst) y
+    B.putStrLn $ B.pack $ intercalate "\t" $ "TF" : colNames table'
+    forM_ (zip (rowNames table') $ M.toLists $ matrix table') $ \(x,y) -> do
+        B.putStrLn $ B.pack $ intercalate "\t" $ x : map (show . fst . fst) y
     -- output pvalue
     -- B.putStrLn $ B.pack $ intercalate "\t" $ "TF" : colNames table'
     -- forM_ (zip (rowNames table') $ M.toLists $ matrix table') $ \(x,y) -> do
