@@ -27,7 +27,7 @@ builder = do
         |] $ do
             submitToRemote .= Just False
             stateful .= True
-            note .= "Extract ATAC-seq data."
+            note .= "Extract (or download) ATAC-seq data."
     path ["Initialization", "Get_ATAC_data"]
 
     node "ATAC_alignment_prepare" [| \input ->
@@ -35,7 +35,7 @@ builder = do
             (\x -> formatIs FastqFile x || formatIs FastqGZip x) input
         |] $ do
             submitToRemote .= Just False
-            note .= "Prepare for ATAC-seq alignment."
+            note .= "Grab FASTQ files; Prepare for ATAC-seq alignment."
     node "ATAC_alignment" [| \x -> bwaAlign <$> atacOutput <*>
         bwaIndex <*> return (bwaCores .= 4) <*> return x >>= liftIO
         |] $ do
@@ -43,7 +43,7 @@ builder = do
             stateful .= True
             -- remoteParam .= "-pe smp 4"
             remoteParam .= "--ntasks-per-node=4"
-            note .= "Use BWA to align ATAC-seq data. Default options: \"-l 32 -k 2 -q 5\"."
+            note .= "Input: FASTQ.\nOutput: BAM.\nUse BWA to align ATAC-seq data. Default options: \"-l 32 -k 2 -q 5\"."
     path [ "Get_ATAC_data", "ATAC_alignment_prepare", "ATAC_alignment"]
 
     node "ATAC_bam_filt_prepare" [| \(oriInput, input) -> do

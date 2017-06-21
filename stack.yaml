@@ -5,14 +5,15 @@ packages:
     - 'taiji-viz'
     - 'bio-pipelines'
     - 'bio-experiments'
+    - '../SciFlow'
 
     - location:
         git: https://github.com/kaizhang/bioinformatics-toolkit.git
         commit: 8d215c97a74eeab264effcd3b8c351d510e6f0c2
 
-    - location:
-        git: https://github.com/kaizhang/SciFlow.git
-        commit: a623a91c9829208c2d98d69e77827f7e975e7136
+#    - location:
+#        git: https://github.com/kaizhang/SciFlow.git
+#        commit: a623a91c9829208c2d98d69e77827f7e975e7136
 
 extra-deps:
     - haskell-igraph-0.3.0

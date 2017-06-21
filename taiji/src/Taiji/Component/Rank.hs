@@ -50,7 +50,7 @@ builder = do
         return (fromJust $ e^.groupName, r)
         |] $ do
             batch .= 1
-            note .= "Running personalized Pagerank algorithm."
+            note .= "Running personalized PageRank algorithm."
     node "Output_ranks" [| \results -> do
         let genes = nubSort $ concatMap (fst . unzip) $ snd $ unzip results
             (groupNames, ranks) = unzip $ flip map results $ \(name, xs) ->

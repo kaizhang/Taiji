@@ -59,7 +59,7 @@ builder = do
 
     node "Get_HiC" [| \input -> return $ input^._4 |] $ do
         submitToRemote .= Just False
-        note .= "Extract HiC data."
+        note .= "Extract chromatin long-range interactions."
     node "Link_TF_gene_prepare" [| \(promoters, hic', peaks, tfbs) -> do
         let hic = M.fromList $ map (\x -> (x^.groupName, x)) hic'
         return $ ContextData tfbs $ flip map peaks $ \p ->

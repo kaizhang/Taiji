@@ -61,7 +61,7 @@ parser = Options
 defaultMain :: Options -> IO ()
 defaultMain opts = do
     Table r c oriData <- fmap colReorder $ readData (input opts)
-        (expression opts) $ DataFiltOpts (cv opts) (minRank opts)
+        (expression opts) $ DataFiltOpts (>=(cv opts)) (minRank opts)
 
         {-
     let pvalues = M.fromRows $ map (G.convert . pooledPValue grps . G.convert) $

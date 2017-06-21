@@ -52,7 +52,9 @@ reorderColumns fn table = table
     (names, cols) = unzip $ fn $ zip (colNames table) $ M.toColumns $ matrix table
 
 data DataFiltOpts = DataFiltOpts
-    { coefficientOfVariance :: Double
+    { cvFilt :: (Double -> Bool)   -- ^ This function will be applied to the
+                                    -- cv of each record to dertermine
+                                    -- whether the record should be kept.
     , lowerBound :: Double
     }
 
@@ -73,7 +75,7 @@ readData input1 input2 opts = do
   where
     f (_, xs) = V.any (>(lowerBound opts)) xs' && case () of
         _ | n >= 5 -> let (m, v) = meanVarianceUnb $ fst $ V.unzip xs
-                      in sqrt v / m > coefficientOfVariance opts
+                      in (cvFilt opts) $ sqrt v / m
           | otherwise -> V.maximum xs' / V.minimum xs' >= 2.5
       where
         n = V.length xs

@@ -37,7 +37,7 @@ builder = do
         |] $ do
             submitToRemote .= Just False
             stateful .= True
-            note .= "Extract RNA-seq data."
+            note .= "Extract or download RNA-seq data."
     node "RNA_alignment_prepare" [| \input ->
         return $ concatMap splitExpByFile $ filterExpByFile
             (\x -> formatIs FastqFile x || formatIs FastqGZip x) input
@@ -68,7 +68,9 @@ builder = do
         let filt (Single fl) = "gene quantification from ENCODE" `elem` (fl^.tags)
             filt _ = False
         return $ mergeExps $ filterExpByFile filt oriInput ++ quant
-        |] $ submitToRemote .= Just False
+        |] $ do
+            submitToRemote .= Just False
+            note .= "Prepare for conversion of gene IDs."
     node "RNA_convert_ID_to_name" [| \x -> geneId2Name <$> rnaOutput <*>
             getConfig' "annotation" <*> return x >>= liftIO
         |] $ do
