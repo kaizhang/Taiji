@@ -1,19 +1,18 @@
-resolver: lts-8.15
+resolver: nightly-2017-06-23
 
 packages:
-    - 'taiji'
-    - 'taiji-viz'
-    - 'bio-pipelines'
-    - 'bio-experiments'
-    - '../SciFlow'
+#    - 'taiji'
+#    - 'taiji-viz'
+#    - 'bio-pipelines'
+#    - 'bio-experiments'
 
     - location:
         git: https://github.com/kaizhang/bioinformatics-toolkit.git
         commit: 8d215c97a74eeab264effcd3b8c351d510e6f0c2
 
-#    - location:
-#        git: https://github.com/kaizhang/SciFlow.git
-#        commit: a623a91c9829208c2d98d69e77827f7e975e7136
+    - location:
+        git: https://github.com/kaizhang/SciFlow.git
+        commit: b95ce531a7bc7ce532357f1411e12a2f488bb159
 
 extra-deps:
     - haskell-igraph-0.3.0

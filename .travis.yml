@@ -1,0 +1,26 @@
+language: c
+
+os:
+  - osx
+
+osx_image: xcode8.3
+
+cache:
+  directories:
+  - $HOME/.stack
+
+env:
+  - PATH=$HOME/.local/bin:$PATH
+
+before_install:
+  - mkdir -p ~/.local/bin
+  # Passing -k to work around https://github.com/travis-ci/travis-ci/issues/4709.
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then travis_retry curl -Lk https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 -C ~/.local/bin; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then travis_retry curl -Lk https://www.stackage.org/stack/linux-x86_64 | tar xz --strip-components=1 -C ~/.local/bin; fi
+
+install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/science/igraph; fi
+  - stack setup
+
+script:
+  - stack -j2 build

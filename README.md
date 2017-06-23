@@ -1,6 +1,8 @@
 Workflow overview:
 ==================
 
+[![Build Status](https://travis-ci.org/kaizhang/Taiji.svg?branch=master)](https://travis-ci.org/kaizhang/Taiji)
+
 ![Taiji workflow](Taiji.png)
 
 For details, please read the [Documentation](http://kzhang.org/Taiji).
