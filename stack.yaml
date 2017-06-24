@@ -1,10 +1,10 @@
 resolver: nightly-2017-06-23
 
 packages:
-#    - 'taiji'
-#    - 'taiji-viz'
-#    - 'bio-pipelines'
-#    - 'bio-experiments'
+    - 'taiji'
+    - 'taiji-viz'
+    - 'bio-pipelines'
+    - 'bio-experiments'
 
     - location:
         git: https://github.com/kaizhang/bioinformatics-toolkit.git
