@@ -1,8 +1,8 @@
 resolver: nightly-2017-06-23
 
 packages:
-    - 'taiji'
-    - 'taiji-viz'
+    - 'Taiji'
+    - 'Taiji-viz'
     - 'bio-pipelines'
     - 'bio-experiments'
 
