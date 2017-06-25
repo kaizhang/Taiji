@@ -16,5 +16,6 @@ ssh-add deploy_key
 # Save some useful information
 REPO=`git config remote.origin.url`
 SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
+git remote set-url origin ${SSH_REPO}
 SHA=`git rev-parse --verify HEAD`
 sphinx-versioning push -r master docs gh-pages .
