@@ -9,16 +9,19 @@ services:
   - docker
 
 env:
-  - TARGET=docs
-  - TARGET=exe
+  global:
+    - ENCRYPTION_LABEL: "9fdce5882088"
+    - COMMIT_AUTHOR_EMAIL: "kai@kzhang.org"
+    - BUILD: "docs"
+    - BUILD: "exe"
 
 python:
   - "3.5"
 
 before_install:
-  - if [ "$TARGET" == "exe" ]; then docker pull kaizhang/haskell-stack; fi
-  - if [ "$TARGET" == "docs" ]; then pip install sphinx==1.5.6 sphinxcontrib-versioning sphinx_rtd_theme; fi
+  - if [ "$BUILD" == "exe" ]; then docker pull kaizhang/haskell-stack; fi
+  - if [ "$BUILD" == "docs" ]; then pip install sphinx==1.5.6 sphinxcontrib-versioning sphinx_rtd_theme; fi
 
 script:
-  - if [ "$TARGET" == "exe" ]; then docker run -v `pwd`:/build:rw kaizhang/haskell-stack /bin/bash -c "cd build && stack build --allow-different-user"; fi
-  - if [ "$TARGET" == "docs" ]; then sphinx-versioning push -r master docs gh-pages .; fi
+  - if [ "$BUILD" == "exe" ]; then docker run -v `pwd`:/build:rw kaizhang/haskell-stack /bin/bash -c "cd build && stack build --allow-different-user"; fi
+  - if [ "$BUILD" == "docs" ]; then bash docs/deploy.sh; fi
