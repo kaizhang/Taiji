@@ -12,6 +12,7 @@ env:
   global:
     - ENCRYPTION_LABEL: "9fdce5882088"
     - COMMIT_AUTHOR_EMAIL: "kai@kzhang.org"
+  matrix:
     - BUILD: "docs"
     - BUILD: "exe"
 
