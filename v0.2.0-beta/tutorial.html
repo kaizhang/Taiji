@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorial &mdash; Taiji 0.2.0-beta documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/banner.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Taiji 0.2.0-beta documentation" href="index.html"/>
+        <link rel="next" title="Input data format" href="input.html"/>
+        <link rel="prev" title="Installation" href="install.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Taiji
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-use">How to use</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parallelism">Parallelism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#auto-recovery">Auto-recovery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#results">Results</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#outputdir-rank"><code class="docutils literal"><span class="pre">OUTPUTDIR/Rank/</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#outputdir-tfbs"><code class="docutils literal"><span class="pre">OUTPUTDIR/TFBS/</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#outputdir-network"><code class="docutils literal"><span class="pre">OUTPUTDIR/Network/</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#outputdir-atac-seq"><code class="docutils literal"><span class="pre">OUTPUTDIR/ATAC_Seq/</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#outputdir-rna-seq"><code class="docutils literal"><span class="pre">OUTPUTDIR/RNA_Seq/</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#visualize-the-results">Visualize the results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="input.html">Input data format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linux_primer.html">Linux Primer</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Taiji</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Tutorial</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The Taiji pipeline aims at integrating different kinds of high throughput profiling techniques to construct TF regulatory networks and identify key regulators through network analysis.
+That being said, one only needs ATAC-seq or DNase-seq data to run the analysis, though the result will be better given other information, especially RNA-seq data.</p>
+<p>The data input to the Taiji pipeline are fastq or bam files.
+For gene expression data, you have the option to provide an external gene expression table instead of having the pipeline analyze the raw RNA-seq data for you.</p>
+</div>
+<div class="section" id="how-to-use">
+<h2>How to use<a class="headerlink" href="#how-to-use" title="Permalink to this headline">¶</a></h2>
+<p>To run the Taiji pipeline, you would need 2 configuration files.</p>
+<p>The first configuration file is used to specify the options used by the pipeline.
+Please look at <a class="reference download internal" href="_downloads/example_config.yml" download=""><code class="xref download docutils literal"><span class="pre">this</span> <span class="pre">example</span> <span class="pre">configuration</span> <span class="pre">file</span></code></a> for details.</p>
+<p>The second configuration file contains the information about the input data sets.
+Take a look at <a class="reference download internal" href="_downloads/example_input.yml" download=""><code class="xref download docutils literal"><span class="pre">this</span> <span class="pre">example</span> <span class="pre">file</span></code></a>.</p>
+<p>To run the pipeline, supply the <code class="docutils literal"><span class="pre">taiji</span></code> with the first configuration file: <code class="docutils literal"><span class="pre">taiji</span> <span class="pre">run</span> <span class="pre">--config</span> <span class="pre">example_config.yml</span></code> or <code class="docutils literal"><span class="pre">taiji</span> <span class="pre">run</span> <span class="pre">--config</span> <span class="pre">example_config.yml</span> <span class="pre">--remote</span></code> if the program is compiled with <code class="docutils literal"><span class="pre">sge</span></code> flag.</p>
+</div>
+<div class="section" id="parallelism">
+<h2>Parallelism<a class="headerlink" href="#parallelism" title="Permalink to this headline">¶</a></h2>
+<p>Taiji supports two levels of parallelism &#8211; node level and workflow level. Node
+level parallelism is automatically turned on when compiling with the <code class="docutils literal"><span class="pre">SGE</span></code> flag.
+The workflow level parallelism can be turned on using <cite>-N &lt;num_of_process&gt;</cite>.
+However, this is only recommended for users with a super computer, as it will
+consume a lot of memory.</p>
+</div>
+<div class="section" id="auto-recovery">
+<h2>Auto-recovery<a class="headerlink" href="#auto-recovery" title="Permalink to this headline">¶</a></h2>
+<p>The pipeline supports auto-recovery, which means you can stop the program at any time and it will resume from the last checkpoint.
+The checkpoints are saved in a file called &#8220;sciflow.db&#8221;.
+Delete this file if you want a fresh run.</p>
+</div>
+<div class="section" id="results">
+<h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
+<p>The Taiji pipeline outputs many files, distributed in several directories.</p>
+<div class="section" id="outputdir-rank">
+<h3><code class="docutils literal"><span class="pre">OUTPUTDIR/Rank/</span></code><a class="headerlink" href="#outputdir-rank" title="Permalink to this headline">¶</a></h3>
+<p>This is the primary output of Taiji pipeline. It contains the TF ranks under different
+conditions / cell-types. Cell-type-specific TF can be identified by looking at
+the TF rank dynamics (fold-change) across different cell types.</p>
+<ul class="simple">
+<li><cite>GeneRank_all.tsv</cite>: Ranks for all genes.</li>
+<li><cite>GeneRank_filtered.tsv</cite>: Genes with lower rank and that are less variate are removed.</li>
+</ul>
+</div>
+<div class="section" id="outputdir-tfbs">
+<h3><code class="docutils literal"><span class="pre">OUTPUTDIR/TFBS/</span></code><a class="headerlink" href="#outputdir-tfbs" title="Permalink to this headline">¶</a></h3>
+<p>BED files of predicted TF binding sites in each cell type.</p>
+</div>
+<div class="section" id="outputdir-network">
+<h3><code class="docutils literal"><span class="pre">OUTPUTDIR/Network/</span></code><a class="headerlink" href="#outputdir-network" title="Permalink to this headline">¶</a></h3>
+<p>Static gene regulatory network for each cell type.</p>
+</div>
+<div class="section" id="outputdir-atac-seq">
+<h3><code class="docutils literal"><span class="pre">OUTPUTDIR/ATAC_Seq/</span></code><a class="headerlink" href="#outputdir-atac-seq" title="Permalink to this headline">¶</a></h3>
+<p>BAM, BED, and peak files for ATAC-seq data.</p>
+</div>
+<div class="section" id="outputdir-rna-seq">
+<h3><code class="docutils literal"><span class="pre">OUTPUTDIR/RNA_Seq/</span></code><a class="headerlink" href="#outputdir-rna-seq" title="Permalink to this headline">¶</a></h3>
+<p>BAM, gene and transcript quantification files for RNA-seq data.</p>
+</div>
+</div>
+<div class="section" id="visualize-the-results">
+<h2>Visualize the results<a class="headerlink" href="#visualize-the-results" title="Permalink to this headline">¶</a></h2>
+<p>We will release the codes of data visualization soon. Stay tuned...</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="input.html" class="btn btn-neutral float-right" title="Input data format" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install.html" class="btn btn-neutral" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016-2017, Kai Zhang.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+        <span class="fa fa-book"> Other Versions</span>
+        v: v0.2.0-beta
+        <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+        <dl>
+            <dt>Tags</dt>
+            <dd><a href="tutorial.html">v0.2.0-beta</a></dd>
+        </dl>
+        <dl>
+            <dt>Branches</dt>
+            <dd><a href="../master/tutorial.html">master</a></dd>
+        </dl>
+    </div>
+</div>
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0-beta',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
