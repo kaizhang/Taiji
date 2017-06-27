@@ -17,6 +17,10 @@ Flag idr
   Description: Call peaks using IDR framework
   Default:     False
 
+Flag static
+  Description: Build static executable
+  Default:     False
+
 library
   ghc-options:         -Wall
   hs-source-dirs:      src
@@ -71,8 +75,11 @@ library
 executable taiji
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -Wall
-  -- ghc-options:         -threaded -Wall -optl-static -optc-static -optl-pthread
+
+  if flag(static)
+    ghc-options:         -threaded -Wall -optl-static -optc-static -optl-pthread
+  else
+    ghc-options:         -threaded -Wall
 
   if flag(idr)
     CPP-Options: -DIDR_PEAK_CALLER

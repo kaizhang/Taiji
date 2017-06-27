@@ -19,10 +19,18 @@ env:
 python:
   - "3.5"
 
+#deploy:
+#  provider: releases
+#  api_key:
+#  file: ".stack-work/"
+#  skip_cleanup: true
+#  on:
+#    tags: true
+
 before_install:
   - if [ "$BUILD" == "exe" ]; then docker pull kaizhang/haskell-stack; fi
   - if [ "$BUILD" == "docs" ]; then pip install sphinx==1.5.6 sphinxcontrib-versioning sphinx_rtd_theme; fi
 
 script:
-  - if [ "$BUILD" == "exe" ]; then docker run -v `pwd`:/build:rw kaizhang/haskell-stack /bin/bash -c "cd build && stack build --allow-different-user"; fi
-  - if [ "$BUILD" == "docs" ]; then bash docs/deploy.sh; fi
+  - if [ "$BUILD" == "exe" ]; then bash build.sh; fi
+  - if [ "$BUILD" == "docs" ]; then bash mkdoc.sh; fi
