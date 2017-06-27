@@ -1,9 +1,9 @@
-language: c
+language:        c
 
 os:
   - linux
 
-sudo: required
+sudo:            required
 
 services:
   - docker
@@ -13,19 +13,20 @@ env:
     - ENCRYPTION_LABEL: "9fdce5882088"
     - COMMIT_AUTHOR_EMAIL: "kai@kzhang.org"
   matrix:
-    - BUILD: "docs"
-    - BUILD: "exe"
+    - BUILD:     "docs"
+    - BUILD:     "exe"
 
 python:
   - "3.5"
 
-#deploy:
-#  provider: releases
-#  api_key:
-#  file: ".stack-work/"
-#  skip_cleanup: true
-#  on:
-#    tags: true
+deploy:
+  provider:      releases
+  api_key:
+    secure:      X7novdkrIjbbcD04mBYAToPYgffroJtZNfr7hzZhRTETdoiPv+G+4uqx1Z5HlCwCOM7+PcUWzQw6I19pd7/ZOZNznINY1jzfb7yPM/DCxJ5kwy1MS789A94MY6RCEguPNNlVuvYFSKs+wdPgck5akb105SjCA9Qqlp3SOSG+TpTeKlYtpNr8pZx7tZCCaUDwiC7ebzVU5hTR3QpzHUkah5imghkPYTdAvFk+N8fKELEtEGFr1NNkuqmvqo6nnbERjfV68MWLNWeSyU533HRRsnPFC5GRu9WKdhdlR0in3fizEBDMD+FwAAum0NeoMo8n4wNrB/nriGVO310v7gPoNn7VbVBxHkI7LJYrS0mdYk5kwjBOboQV1785gcxBePQ3zC+gK1XKCBwCJWOh57AaVI7tClgSFamWvvmHoz+hKQy0RiKlz8I4Gu2d5X3DEqLD6ReyqOgCxGUXKkuYWgwfRqZqZQBF9UCL++D+B6gmdBzM5OaOl9ZY4A76PM+RUfntRsQOMIoIS91Lnq1k8o2Kb21twFV6+PvGQz52hCUO0R3pNzYunT+KtvQHK6fkxu+V+b7wTzKTJyYMMWjjWzCgckj4QZ7FfrvP4+LS2r9bIQDWtNfAYCcFOSWgDWLdXsz3SAq/8WpZApmDHn5oQi7uHrTUajkgijjxLcjIjXvqOZE=
+  file:          taiji-Linux-x86_64-static
+  on:
+    tags: true
+    condition: "$BUILD = exe"
 
 before_install:
   - if [ "$BUILD" == "exe" ]; then docker pull kaizhang/haskell-stack; fi
