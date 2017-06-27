@@ -11,7 +11,7 @@ Mandatory:
 - BWA-v0.7.12
 - `MACS2-v2.1.1.20160309 <https://pypi.python.org/pypi/MACS2/2.1.1.20160309>`_
 - `Picard <https://github.com/broadinstitute/picard/releases/tag/2.6.0>`_
-- java-v1.8
+- java-v1.8 (required by Picard)
 
 Optional:
 
@@ -29,9 +29,7 @@ Software installation
 .. note::
     Before trying to install the program from source, you should check whether a
     `binary release <https://github.com/kaizhang/Taiji/releases>`_
-    is available for your platform (Currently we have a test release of statically
-    linked binary for Linux system).
-    If the answer is "Yes", simply download
+    is available for your platform. If the answer is "Yes", simply download
     the binary file, put it in your system path and skip the following sections.
     Otherwise, continue to read.
 
