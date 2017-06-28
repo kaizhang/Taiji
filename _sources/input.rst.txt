@@ -38,3 +38,5 @@ HiC
 +===================+=================+===============+==============+
 | Plain Text        | a list of Loops | "loops"       | None         |
 +-------------------+-----------------+---------------+--------------+
+
+Taiji can automatically download data from ENCODE portal and GEO database.
