@@ -13,12 +13,13 @@ import           Bio.Pipeline.NGS
 import           Bio.Seq.IO                 (mkIndex)
 import           Control.Arrow              (first)
 import           Control.Lens
+import           Control.Monad              ((>=>))
 import           Control.Monad.IO.Class     (liftIO)
 import           Data.Aeson.Types           (Value (..), parseMaybe)
 import           Data.CaseInsensitive       (CI, mk)
 import qualified Data.HashMap.Strict        as M
 import           Data.List                  (foldl')
-import           Data.Maybe                 (fromMaybe, fromJust)
+import           Data.Maybe                 (fromJust, fromMaybe)
 import qualified Data.Text                  as T
 import           Data.Yaml                  (decodeFile)
 import           Scientific.Workflow        hiding (Success)
@@ -32,9 +33,9 @@ builder :: Builder ()
 builder = do
     node "Initialization" [| \() -> do
         dat <- mkAllDirs >> mkIndices >> readData
-        case isGroupComplete dat of
+        case checkInput dat of
             Left x  -> error x
-            Right _ -> return dat
+            Right d -> return d
         |] $ do stateful .= True
                 note .= "Create output directories; Make genome indices; Read input data."
 
@@ -106,18 +107,29 @@ readData = do
 -- Checking common errors for input data
 --------------------------------------------------------------------------------
 
-isGroupComplete :: InputData -> Either String ()
-isGroupComplete (atac, chip, rna, hic) = foldl' f (Right ()) counts
+checkInput :: InputData -> Either String InputData
+checkInput = isGroupComplete >=> isIdUnique
+
+isGroupComplete :: InputData -> Either String InputData
+isGroupComplete input@(atac, chip, rna, hic) = foldl' f (Right input) counts
   where
     f (Left x) _ = Left x
-    f (Right ()) (x,c)
+    f (Right i) (x,c)
         | c < nExps = Left $ printf
             "Missing Group %s in some experiments. Please check your inputs." (T.unpack x)
-        | otherwise = Right ()
+        | otherwise = Right i
     counts = M.toList $ M.fromListWith (+) $ zip (map fromJust $ concat groupNames) $ repeat 1
     nExps = length groupNames
     groupNames = filter (not . null) [ map (^.groupName) atac
         , map (^.groupName) chip, map (^.groupName) rna, map (^.groupName) hic ]
+
+isIdUnique :: InputData -> Either String InputData
+isIdUnique input@(atac, chip, rna, hic)
+    | null duplicates = Right input
+    | otherwise = Left $ "Duplicate ID: " ++ T.unpack (T.intercalate ", " duplicates)
+  where
+    ids = map (^.eid) atac ++ map (^.eid) chip ++ map (^.eid) rna ++ map (^.eid) hic
+    duplicates = M.keys $ M.filter (>1) $ M.fromListWith (+) $ zip ids $ repeat 1
 
 {-
 isGroupIdUnique :: InputData -> Either String ()
