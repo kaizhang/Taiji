@@ -8,8 +8,9 @@ import           Bio.Utils.Misc            (readDouble)
 import           Control.Lens              ((.=), (^.))
 import           Control.Monad
 import           Control.Monad.IO.Class    (liftIO)
-import           Data.Binary               (encodeFile)
+import           Data.Binary               (encode)
 import qualified Data.ByteString.Char8     as B
+import qualified Data.ByteString.Lazy     as BL
 import           Data.CaseInsensitive      as CI (CI, mk, original)
 import           Data.Char                 (toLower, toUpper)
 import           Data.Function             (on)
@@ -17,11 +18,12 @@ import           Data.List                 (groupBy, sort)
 import qualified Data.Map.Strict           as M
 import           Data.Maybe
 import qualified Data.Text                 as T
-import           Database.PureCDB          (addBS, makeCDB)
 import           IGraph                    (getNodes, nodeLab, pre, suc)
 import           Scientific.Workflow
 import           Shelly                    (run_, shelly)
 import           System.IO.Temp            (withTempDirectory)
+import Control.DeepSeq (($!!))
+import Codec.Compression.GZip (compressWith, defaultCompressParams, compressLevel, bestCompression)
 
 import           Taiji.Component.Rank      (buildNet)
 import           Taiji.Types
@@ -30,7 +32,7 @@ builder :: Builder ()
 builder = do
     node "Export_results" [| \x -> do
         output <- getConfig' "outputDir"
-        liftIO $ getResults (output ++ "/TaijiResults.zip") x
+        liftIO $ getResults (output ++ "/TaijiResults.bin.gz") x
         |] $ do
             submitToRemote .= Just False
             stateful .= True
@@ -44,21 +46,23 @@ getResults :: Experiment e
               , [e]     -- ^ networks
               )
            -> IO ()
-getResults output (pagerank, Just expr, es) =
-    withTempDirectory "./" "tmp_dir_results." $ \tmp -> do
-        table <- readData pagerank expr
-        encodeFile (tmp ++ "/ranktable") table
-        forM_ es $ \e -> do
-            gr <- buildNet e
-            let filename = tmp ++ "/" ++ T.unpack (fromJust $ e^.groupName) ++ ".cdb"
-            flip makeCDB filename $ forM_ (rowNames table) $ \x -> case getNodes gr (mk x) of
-                [] -> return ()
-                (i:_) -> do
-                    let children = B.intercalate "\t" $ map (format . original . nodeLab gr) $ pre gr i
-                        parents = B.intercalate "\t" $ map (format . original . nodeLab gr) $ suc gr i
-                    addBS (x `B.append` "_parents") parents
-                    addBS (x `B.append` "_children") children
-        shelly $ run_ "zip" ["-rj", T.pack output, T.pack tmp]
+getResults output (pagerank, Just expr, es) = do
+    table <- readData pagerank expr
+    nets <- forM es $ \e -> do
+        gr <- buildNet e
+        let results = M.fromList $ flip mapMaybe (rowNames table) $
+                \x -> case getNodes gr (mk x) of
+                    [] -> Nothing
+                    (i:_) ->
+                        let children = B.intercalate "\t" $
+                                map (format . original . nodeLab gr) $ pre gr i
+                            parents = B.intercalate "\t" $
+                                map (format . original . nodeLab gr) $ suc gr i
+                        in Just (x, parents `B.append` "+" `B.append` children)
+        return $!! (fromJust $ e^.groupName, results)
+    BL.writeFile output $
+        compressWith defaultCompressParams{compressLevel=bestCompression} $
+        encode $ TaijiResults table $ M.fromList nets
   where
     format x = let (a, b) = B.splitAt 1 x
                in B.map toUpper a `B.append` B.map toLower b
@@ -73,7 +77,7 @@ readData input1 input2 = do
     let (labels, xs) = unzip $ map unzip $ groupBy ((==) `on` (fst.fst)) $ sort $
             M.toList $ M.intersectionWith (,) rank expr
         rowlab = map (format . original) $ fst $ unzip $ map head labels
-        collab = map (format . original) $ snd $ unzip $ head $ labels
+        collab = map original $ snd $ unzip $ head $ labels
     return $ uncurry (RankTable rowlab collab) $ unzip $ map unzip xs
   where
     log' x | x == 0 = log 0.01

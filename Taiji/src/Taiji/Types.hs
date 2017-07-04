@@ -25,6 +25,13 @@ data RankTable = RankTable
     , colNames    :: [B.ByteString]
     , ranks       :: [[Double]]
     , expressions :: [[Double]]
-    } deriving (Eq, Generic)
+    } deriving (Generic)
 
 instance Binary RankTable
+
+data TaijiResults = TaijiResults
+    { ranktable :: RankTable
+    , nets :: M.Map T.Text (M.Map B.ByteString B.ByteString)
+    } deriving (Generic)
+
+instance Binary TaijiResults

@@ -129,7 +129,7 @@ isIdUnique input@(atac, chip, rna, hic)
     | otherwise = Left $ "Duplicate ID: " ++ T.unpack (T.intercalate ", " duplicates)
   where
     ids = map (^.eid) atac ++ map (^.eid) chip ++ map (^.eid) rna ++ map (^.eid) hic
-    duplicates = M.keys $ M.filter (>1) $ M.fromListWith (+) $ zip ids $ repeat 1
+    duplicates = M.keys $ M.filter (>1) $ M.fromListWith (+) $ zip ids $ repeat (1::Int)
 
 {-
 isGroupIdUnique :: InputData -> Either String ()

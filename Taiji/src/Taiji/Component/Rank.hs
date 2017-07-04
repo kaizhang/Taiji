@@ -29,7 +29,6 @@ import           IGraph
 import           IGraph.Structure                  (pagerank,
                                                     personalizedPagerank)
 import           Scientific.Workflow
-import           Statistics.Sample                 (meanVarianceUnb)
 
 import           Taiji.Constants
 import           Taiji.Types

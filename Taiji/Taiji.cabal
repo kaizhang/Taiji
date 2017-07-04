@@ -57,13 +57,13 @@ library
     , double-conversion
     , data-ordlist
     , data-default
+    , deepseq
     , hashable
     , haskell-igraph >=0.2.2
     , http-conduit
     , IntervalMap
     , lens
     , mtl
-    , pure-cdb
     , SciFlow >=0.5.4
     , statistics
     , split
@@ -73,6 +73,7 @@ library
     , unordered-containers
     , vector
     , yaml
+    , zlib
 
 executable taiji
   hs-source-dirs:      app
