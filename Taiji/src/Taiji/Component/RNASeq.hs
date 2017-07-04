@@ -167,7 +167,7 @@ average [a,b,c] = (a + b + c) / 3
 average xs = foldl1' (+) xs / fromIntegral (length xs)
 {-# INLINE average #-}
 
--- | Combine RNA expression data into a table.
+-- | Combine RNA expression data into a table and output
 combineExpression :: FilePath
                   -> [RNASeq]
                   -> IO (Maybe FilePath)

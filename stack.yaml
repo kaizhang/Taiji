@@ -18,3 +18,4 @@ extra-deps:
     - haskell-igraph-0.3.0
     - drmaa-0.2.0
     - HsHTSLib-1.3.2.0
+    - pure-cdb-0.1.2

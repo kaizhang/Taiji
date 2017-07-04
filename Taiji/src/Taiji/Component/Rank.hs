@@ -59,7 +59,9 @@ builder = do
             dataTable = (groupNames, map original genes, transpose ranks)
 
         dir <- rankOutput
-        liftIO $ outputData dir dataTable $ getMetrics dataTable
+        let filename = dir ++ "/TFRanks.tsv"
+        liftIO $ outputData filename dataTable
+        return filename
         |] $ do
             submitToRemote .= Just False
             stateful .= True
@@ -115,28 +117,12 @@ buildNet e = do
     return $ fromLabeledEdges $ flip concatMap result $ \(a, b) ->
         zip (zip (repeat a) $ fst $ unzip b) $ repeat ()
 
-data Metrics = Metrics
-    { averageRank   :: Double
-    , variability   :: Double
-    , logFoldChange :: Double
-    }
-
-getMetrics :: ([T.Text], [B.ByteString], [[Double]]) -> [(B.ByteString, Metrics)]
-getMetrics (cts, geneNames, dat) = zip geneNames $ map (f . U.fromList) dat
-  where
-    f xs = let (m, v) = meanVarianceUnb xs
-               fold = log $ max 1 $ U.maximum xs / U.minimum xs
-           in Metrics m (sqrt v / m) fold
-
 outputData :: FilePath
            -> ([T.Text], [B.ByteString], [[Double]])
-           -> [(B.ByteString, Metrics)] -> IO ()
-outputData dir (cts, geneNames, dat) metrics = do
-    let filteredData = map toBS $ filter f $ zip metrics dat
-        allData = map toBS $ zip metrics dat
+           -> IO ()
+outputData filename (cts, geneNames, dat) = do
+    let allData = zipWith toBS geneNames dat
         header = B.pack $ T.unpack $ T.intercalate "\t" $ "Gene" : cts
-    B.writeFile (dir++"GeneRank_filtered.tsv") $ B.unlines $ header : filteredData
-    B.writeFile (dir++"GeneRank_all.tsv") $ B.unlines $ header : allData
+    B.writeFile filename $ B.unlines $ header : allData
   where
-    f ((_, Metrics m v fold), _) = m > 0.0001 && fold > 1.5
-    toBS ((nm, _), xs) = B.intercalate "\t" $ nm : map toShortest xs
+    toBS nm xs = B.intercalate "\t" $ nm : map toShortest xs

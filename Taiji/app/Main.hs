@@ -19,6 +19,7 @@ import qualified Taiji.Component.Network                as Network
 import qualified Taiji.Component.Rank                   as Rank
 import qualified Taiji.Component.RNASeq                 as RNASeq
 import qualified Taiji.Component.TFBS                   as TFBS
+import qualified Taiji.Component.Exporter as Exporter
 
 #ifdef IDR_PEAK_CALLER
 import qualified Taiji.Component.ATACSeq.CallPeak.IDR   as CallPeak
@@ -30,4 +31,5 @@ import qualified Taiji.Component.ATACSeq.CallPeak.MACS2 as CallPeak
 mainWith defaultMainOpts
     { programHeader = printf "Taiji-v%s" (showVersion version)
     } $ Initialization.builder >> ATACSeq.builder >> RNASeq.builder >>
-        TFBS.builder >> Network.builder >> Rank.builder >> CallPeak.builder
+        TFBS.builder >> Network.builder >> Rank.builder >> CallPeak.builder >>
+        Exporter.builder

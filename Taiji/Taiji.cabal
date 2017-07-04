@@ -32,6 +32,7 @@ library
     Taiji.Component.RNASeq
     Taiji.Component.TFBS
     Taiji.Component.Rank
+    Taiji.Component.Exporter
     Taiji.Constants
     Taiji.Types
     Taiji.Tools
@@ -62,6 +63,7 @@ library
     , IntervalMap
     , lens
     , mtl
+    , pure-cdb
     , SciFlow >=0.5.4
     , statistics
     , split
