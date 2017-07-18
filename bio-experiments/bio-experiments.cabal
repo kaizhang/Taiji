@@ -29,6 +29,7 @@ library
     , aeson
     , bytestring
     , cereal
+    , cereal-text
     , containers
     , data-ordlist
     , text

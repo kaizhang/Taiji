@@ -8,17 +8,13 @@
 
 module Bio.Data.Experiment.Types.Internal where
 
-import           Control.Lens       hiding ((.=))
-import           Data.Aeson.TH      (defaultOptions, deriveJSON)
-import qualified Data.Map.Strict    as M
-import           Data.Serialize     (Serialize (..))
-import qualified Data.Text          as T
-import qualified Data.Text.Encoding as T
-import           GHC.Generics       (Generic)
-
-instance Serialize T.Text where
-    put txt = put $ T.encodeUtf8 txt
-    get     = fmap T.decodeUtf8 get
+import           Control.Lens        hiding ((.=))
+import           Data.Aeson.TH       (defaultOptions, deriveJSON)
+import qualified Data.Map.Strict     as M
+import           Data.Serialize      (Serialize (..))
+import           Data.Serialize.Text ()
+import qualified Data.Text           as T
+import           GHC.Generics        (Generic)
 
 data FileType = BamFile
               | BaiFile
@@ -41,7 +37,7 @@ data File = File
     { fileLocation :: !FilePath
     , fileFormat   :: !FileType
     , fileInfo     :: !(M.Map T.Text T.Text)
-    , fileTags :: ![T.Text]
+    , fileTags     :: ![T.Text]
     } deriving (Show, Read, Eq, Ord, Generic)
 
 makeFields ''File

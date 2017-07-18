@@ -12,7 +12,7 @@ packages:
 
     - location:
         git: https://github.com/kaizhang/SciFlow.git
-        commit: b95ce531a7bc7ce532357f1411e12a2f488bb159
+        commit: 81e0649f83f56257654d0ddb2602837549b5fc89
 
 extra-deps:
     - haskell-igraph-0.3.0
