@@ -31,8 +31,10 @@ import           Taiji.Types
 builder :: Builder ()
 builder = do
     node "Export_results" [| \x -> do
-        output <- getConfig' "outputDir"
-        liftIO $ getResults (output ++ "/TaijiResults.bin.gz") x
+        outputdir <- getConfig' "outputDir"
+        let output = outputdir ++ "/TaijiResults.bin.gz"
+        liftIO $ getResults output x
+        return output
         |] $ do
             submitToRemote .= Just False
             stateful .= True
