@@ -1,0 +1,306 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Linux Primer &mdash; Taiji 0.2.0-beta documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/banner.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Taiji 0.2.0-beta documentation" href="index.html"/>
+        <link rel="prev" title="Extensions" href="extension.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Taiji
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input.html">Input data format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extension.html">Extensions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Linux Primer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#linux-path-environment-variable">Linux path environment variable</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-linux-path-variable">Using Linux <code class="docutils literal"><span class="pre">PATH</span></code> variable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-a-new-directory-into-path-variable">Adding a new directory into <code class="docutils literal"><span class="pre">PATH</span></code> variable</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Taiji</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Linux Primer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="linux-primer">
+<h1>Linux Primer<a class="headerlink" href="#linux-primer" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="linux-path-environment-variable">
+<h2>Linux path environment variable<a class="headerlink" href="#linux-path-environment-variable" title="Permalink to this headline">¶</a></h2>
+<p>(adapted from <a class="reference external" href="https://linuxconfig.org/linux-path-environment-variable">https://linuxconfig.org/linux-path-environment-variable</a>)</p>
+<div class="section" id="using-linux-path-variable">
+<h3>Using Linux <code class="docutils literal"><span class="pre">PATH</span></code> variable<a class="headerlink" href="#using-linux-path-variable" title="Permalink to this headline">¶</a></h3>
+<p>Linux path environmental variable contains a list of directories in which the shell looks for executable programs every time you run a command or program.
+Use <code class="docutils literal"><span class="pre">echo</span></code> command to print your <code class="docutils literal"><span class="pre">PATH</span></code> variable:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ echo $PATH
+/home/lilo/bin:/usr/local/bin:/usr/bin:/bin:/usr/games
+</pre></div>
+</div>
+<p>If the program / command is located within the <code class="docutils literal"><span class="pre">PATH</span></code>, user do not need to include full path in order to execute a certain command.
+For example: <code class="docutils literal"><span class="pre">date</span></code> command is located within <code class="docutils literal"><span class="pre">/bin</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ which date
+/bin/date
+</pre></div>
+</div>
+<p>and <code class="docutils literal"><span class="pre">/bin</span></code> is defined in the <code class="docutils literal"><span class="pre">PATH</span></code> variable.
+Therefore, to execute date command is easy as:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ date
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-a-new-directory-into-path-variable">
+<h3>Adding a new directory into <code class="docutils literal"><span class="pre">PATH</span></code> variable<a class="headerlink" href="#adding-a-new-directory-into-path-variable" title="Permalink to this headline">¶</a></h3>
+<p>From time to time you may need to add new directory into your <code class="docutils literal"><span class="pre">PATH</span></code> scope.
+The following example adds new directory <code class="docutils literal"><span class="pre">/bin/myscripts</span></code> into <code class="docutils literal"><span class="pre">PATH</span></code> variable:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ echo $PATH
+/home/lilo/bin:/usr/local/bin:/usr/bin:/bin:/usr/games
+$ PATH=$PATH:/bin/myscripts
+$ export PATH
+$ echo $PATH
+/home/lilo/bin:/usr/local/bin:/usr/bin:/bin:/usr/games:/bin/myscripts
+</pre></div>
+</div>
+<p>The above method temporarily adds certain directories into the <code class="docutils literal"><span class="pre">PATH</span></code> variable.
+To permanently modify the <code class="docutils literal"><span class="pre">PATH</span></code> variable, copy following text to <code class="docutils literal"><span class="pre">/home/yourname/.bash_profile</span></code> or <code class="docutils literal"><span class="pre">/home/yourname/.bashrc</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>PATH=$PATH:/bin/myscripts
+export PATH
+</pre></div>
+</div>
+<p>And then execute this command: <code class="docutils literal"><span class="pre">source</span> <span class="pre">/home/yourname/.bash_profile</span></code> or <code class="docutils literal"><span class="pre">source</span> <span class="pre">/home/yourname/.bashrc</span></code>, depending on which file you have modified.</p>
+<p>To see whether the <code class="docutils literal"><span class="pre">PATH</span></code> has been successfully modified, execute: <code class="docutils literal"><span class="pre">echo</span> <span class="pre">$PATH</span></code>.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="extension.html" class="btn btn-neutral" title="Extensions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016-2017, Kai Zhang.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+        <span class="fa fa-book"> Other Versions</span>
+        v: v0.2.0
+        <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+        <dl>
+            <dt>Tags</dt>
+            <dd><a href="linux_primer.html">v0.2.0</a></dd>
+            <dd><a href="../v0.2.0-beta2/linux_primer.html">v0.2.0-beta2</a></dd>
+        </dl>
+        <dl>
+            <dt>Branches</dt>
+            <dd><a href="../master/linux_primer.html">master</a></dd>
+        </dl>
+    </div>
+</div>
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0-beta',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
