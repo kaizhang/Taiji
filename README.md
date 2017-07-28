@@ -1,3 +1,5 @@
+An experimental visualization framework is here: https://github.com/Taiji-pipeline/Taiji-viz
+
 Workflow overview:
 ==================
 
