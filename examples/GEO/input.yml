@@ -1,0 +1,16 @@
+ATAC-Seq:
+- group: 'CD4'
+  replicates:
+  - rep: 1
+    files:
+    - path: 'SRR1533856+SRR1533855+SRR1533854+SRR1533853'
+      format: SRA
+  id: 'CD4_ATAC'
+
+- group: 'CD8'
+  replicates:
+  - rep: 1
+    files:
+    - path: 'SRR1533861'
+      format: SRA
+  id: 'CD8_ATAC'

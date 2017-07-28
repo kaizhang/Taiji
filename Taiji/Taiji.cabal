@@ -1,5 +1,5 @@
 name:                Taiji
-version:             0.2.0-beta
+version:             0.2.0
 synopsis:            An integrated analysis pipeline.
 description:         Please see README.md
 homepage:            http://kzhang.org/Taiji/
@@ -64,6 +64,7 @@ library
     , IntervalMap
     , lens
     , mtl
+    , matrices
     , SciFlow >=0.5.4
     , statistics
     , split
@@ -74,6 +75,7 @@ library
     , vector
     , yaml
     , zlib
+    , vector-binary-instances
 
 executable taiji
   hs-source-dirs:      app

@@ -5,25 +5,28 @@ module Taiji.Component.Exporter (builder) where
 
 import           Bio.Data.Experiment.Types
 import           Bio.Utils.Misc            (readDouble)
+import           Codec.Compression.GZip    (bestCompression, compressLevel,
+                                            compressWith, defaultCompressParams)
+import           Control.DeepSeq           (($!!))
 import           Control.Lens              ((.=), (^.))
 import           Control.Monad
 import           Control.Monad.IO.Class    (liftIO)
 import           Data.Binary               (encode)
 import qualified Data.ByteString.Char8     as B
-import qualified Data.ByteString.Lazy     as BL
+import qualified Data.ByteString.Lazy      as BL
 import           Data.CaseInsensitive      as CI (CI, mk, original)
 import           Data.Char                 (toLower, toUpper)
 import           Data.Function             (on)
 import           Data.List                 (groupBy, sort)
 import qualified Data.Map.Strict           as M
+import qualified Data.Matrix.Unboxed       as MU
 import           Data.Maybe
 import qualified Data.Text                 as T
+import qualified Data.Vector               as V
 import           IGraph                    (getNodes, nodeLab, pre, suc)
 import           Scientific.Workflow
 import           Shelly                    (run_, shelly)
 import           System.IO.Temp            (withTempDirectory)
-import Control.DeepSeq (($!!))
-import Codec.Compression.GZip (compressWith, defaultCompressParams, compressLevel, bestCompression)
 
 import           Taiji.Component.Rank      (buildNet)
 import           Taiji.Types
@@ -52,7 +55,7 @@ getResults output (pagerank, Just expr, es) = do
     table <- readData pagerank expr
     nets <- forM es $ \e -> do
         gr <- buildNet e
-        let results = M.fromList $ flip mapMaybe (rowNames table) $
+        let results = M.fromList $ flip mapMaybe (V.toList $ rowNames table) $
                 \x -> case getNodes gr (mk x) of
                     [] -> Nothing
                     (i:_) ->
@@ -78,9 +81,12 @@ readData input1 input2 = do
     expr <- (fmap log' . readTSV) <$> B.readFile input2
     let (labels, xs) = unzip $ map unzip $ groupBy ((==) `on` (fst.fst)) $ sort $
             M.toList $ M.intersectionWith (,) rank expr
-        rowlab = map (format . original) $ fst $ unzip $ map head labels
-        collab = map original $ snd $ unzip $ head $ labels
-    return $ uncurry (RankTable rowlab collab) $ unzip $ map unzip xs
+        rowlab = V.fromList $ map (format . original) $ fst $ unzip $
+            map head labels
+        collab = V.fromList $ map (T.pack . B.unpack . original) $ snd $
+            unzip $ head $ labels
+        (rank', expr') = unzip $ map unzip xs
+    return $ RankTable rowlab collab (MU.fromLists rank') $ MU.fromLists expr'
   where
     log' x | x == 0 = log 0.01
            | otherwise = log x

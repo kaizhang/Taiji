@@ -116,7 +116,9 @@ geneId2Name outdir anno e = do
 
     rs <- forM (e^.replicates) $ \r -> do
         let [fl] = r^..files.folded._Single.
-                filtered (elem "gene quantification" . (^.tags))
+                filtered (\x -> "gene quantification" `elem` (x^.tags) ||
+                "gene quantification from ENCODE" `elem` (x^.tags)
+                )
             output = outdir ++ "/" ++ T.unpack (e^.eid) ++ "_rep" ++
                 show (r^.number) ++ "_TPM_by_names.tsv"
             newFile = Single $ location .~ output $
