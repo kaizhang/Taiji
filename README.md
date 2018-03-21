@@ -1,13 +1,6 @@
-An experimental visualization framework is here: https://github.com/Taiji-pipeline/Taiji-viz
+**This repository is obsolete. The latest development happens [here](https://github.com/Taiji-pipeline/Taiji).**
 
-Workflow overview:
-==================
-
-[![Build Status](https://travis-ci.org/kaizhang/Taiji.svg?branch=master)](https://travis-ci.org/kaizhang/Taiji)
-
-![Taiji workflow](Taiji.png)
-
-For details, please read the [Documentation](http://kzhang.org/Taiji).
+[old documentation](http://kzhang.org/Taiji).
 
 If you have used **Taiji** in your research, please consider cite the following paper(s):
 
