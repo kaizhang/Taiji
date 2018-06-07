@@ -89,7 +89,7 @@ downloadENCODE acc dir = do
          let filename = T.unpack $ snd $ T.breakOnEnd "filename=" $ T.pack $
                 B.unpack $ fromJust $ lookup "Content-Disposition" $
                 responseHeaders response
-         responseBody response $$+- sinkFileBS (dir ++ "/" ++ filename)
+         runConduit $ responseBody response .| sinkFileBS (dir ++ "/" ++ filename)
          return $ dir ++ "/" ++ filename
   where
     url = "https://www.encodeproject.org/files/" ++ acc ++ "/@@download"

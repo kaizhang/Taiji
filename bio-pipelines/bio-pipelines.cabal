@@ -30,7 +30,7 @@ library
     , bio-experiments
     , bioinformatics-toolkit >=0.3.2
     , case-insensitive
-    , conduit-combinators
+    , conduit
     , conduit-extra
     , cereal
     , data-default

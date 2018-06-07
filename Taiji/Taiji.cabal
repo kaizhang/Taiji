@@ -52,7 +52,7 @@ library
     , bioinformatics-toolkit >=0.3.2
     , case-insensitive
     , containers
-    , conduit-combinators
+    , conduit
     , cereal
     , double-conversion
     , data-ordlist

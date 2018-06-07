@@ -5,6 +5,7 @@
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DataKinds #-}
 
 module Taiji.Component.Rank where
 
@@ -26,8 +27,7 @@ import           Data.Maybe
 import qualified Data.Text                         as T
 import qualified Data.Vector.Unboxed               as U
 import           IGraph
-import           IGraph.Structure                  (pagerank,
-                                                    personalizedPagerank)
+import           IGraph.Algorithms (pagerank)
 import           Scientific.Workflow
 
 import           Taiji.Constants
@@ -98,17 +98,16 @@ pageRank expr e = do
         ranks = case expr of
             Just expr' ->
                 let lookupExpr x = M.lookupDefault (0.01,-10) x expr'
-                    nodeWeights = map (exp . snd . lookupExpr) labs
-                    edgeWeights = map (sqrt . fst . lookupExpr . nodeLab gr . snd) $
-                        edges gr
-                in personalizedPagerank gr nodeWeights (Just edgeWeights) 0.85
-            Nothing -> pagerank gr Nothing 0.85
+                    nodeWeights = exp . snd . lookupExpr
+                    gr' = emap (\((_, to), _) -> sqrt $ fst $ lookupExpr $ nodeLab gr to) gr
+                in pagerank gr' 0.85 (Just nodeWeights) (Just id)
+            Nothing -> pagerank gr 0.85 Nothing Nothing
     return $ flip mapMaybe (zip [0..] ranks) $ \(i, rank) ->
         if i `S.member` tfs
             then Just (nodeLab gr i, rank)
             else Nothing
 
-buildNet :: Experiment e => e -> IO (LGraph D GeneName ())
+buildNet :: Experiment e => e -> IO (Graph 'D GeneName ())
 buildNet e = do
     let [fl] = e^..replicates.folded.filtered ((==0) . (^.number)).files.folded.
             _Single.filtered ((==["gene-TF assignment"]) . (^.tags))

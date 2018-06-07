@@ -30,6 +30,7 @@ import           Data.Conduit.Zlib         (ungzip)
 import           Data.Ord
 import qualified Data.Text                 as T
 import           Shelly                    (fromText, mv, run_, shelly)
+import           System.IO
 import           System.IO.Temp            (withTempDirectory)
 
 import           Bio.Pipeline.Utils
@@ -115,10 +116,11 @@ frip :: FilePath   -- ^ reads, in BedGzip format
      -> IO Double
 frip tags peaks = do
     p <- readBed' peaks :: IO [BED3]
-    (n, m) <- flip execStateT (0::Int, 0::Int) $ runResourceT $
-        sourceFileBS tags =$= ungzip =$= linesUnboundedAsciiC =$=
-        mapC (fromLine :: B.ByteString -> BED3) =$= total =$= intersectBed p $$ count
-    return $ fromIntegral m / fromIntegral n
+    withFile tags ReadMode $ \h -> do
+        (n, m) <- flip execStateT (0::Int, 0::Int) $ 
+            sourceHandle h =$= ungzip =$= linesUnboundedAsciiC =$=
+            mapC (fromLine :: B.ByteString -> BED3) =$= total =$= intersectBed p $$ count
+        return $ fromIntegral m / fromIntegral n
   where
     total = awaitForever $ \i -> do
         (c, x) <- get

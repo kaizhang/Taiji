@@ -39,7 +39,7 @@ module Bio.Pipeline.NGS
     , rsemQuant
     ) where
 
-import           Bio.Data.Bam              (bamToBed, readBam, runBam,
+import           Bio.Data.Bam              (bamToBed, readBam, withBamFile,
                                             sortedBamToBedPE)
 import           Bio.Data.Bed              (BED, BED3 (..), BEDLike (..), toLine)
 import           Bio.Data.Experiment.Types
@@ -258,8 +258,8 @@ bam2Bed prefix fn (Single fl)
         let output = prefix ++ takeBaseName (fl^.location) ++ ".bed.gz"
             bedFile = format .~ BedGZip $
                       location .~ output $ fl
-        runBam $ readBam (fl^.location) =$= bamToBed =$= filterC fn =$=
-            mapC toLine =$= unlinesAsciiC =$= gzip $$ sinkFileBS output
+        withBamFile (fl^.location) $ \h -> readBam h =$= bamToBed =$= filterC fn
+            =$= mapC toLine =$= unlinesAsciiC =$= gzip $$ sinkFileBS output
         return $ Just $ Single bedFile
     | otherwise = return Nothing
 bam2Bed _ _ _ = return Nothing
@@ -275,9 +275,9 @@ sortedBam2BedPE prefix fn (Single fl)
         let output = prefix ++ takeBaseName (fl^.location) ++ ".bed.gz"
             bedFile = format .~ BedGZip $
                       location .~ output $ fl
-        runBam $ readBam (fl^.location) =$= sortedBamToBedPE =$= filterC fn =$=
-            concatMapC f =$= mapC toLine =$= unlinesAsciiC =$= gzip $$
-            sinkFileBS output
+        withBamFile (fl^.location) $ \h -> readBam h =$= sortedBamToBedPE =$=
+            filterC fn =$= concatMapC f =$= mapC toLine =$= unlinesAsciiC =$=
+            gzip $$ sinkFileBS output
         return $ Just $ Single bedFile
     | otherwise = return Nothing
   where

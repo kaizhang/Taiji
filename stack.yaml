@@ -1,20 +1,20 @@
-resolver: nightly-2017-06-23
+resolver: lts-11.12
 
 packages:
     - 'Taiji'
-    - 'Taiji-viz'
+
+extra-deps:
+    - drmaa-0.2.0
+    - HsHTSLib-1.3.2.3
+    - clustering-0.4.0
+    - bioinformatics-toolkit-0.4.1
+    - graphviz-2999.19.0.0
+    - fgl-5.5.4.0
     - 'bio-pipelines'
     - 'bio-experiments'
 
-    - location:
-        git: https://github.com/kaizhang/bioinformatics-toolkit.git
-        commit: 8d215c97a74eeab264effcd3b8c351d510e6f0c2
+    - git:     https://github.com/kaizhang/haskell-igraph.git
+      commit:  1987cba3319db7749391dbc40131e56452e4c150
 
-    - location:
-        git: https://github.com/kaizhang/SciFlow.git
-        commit: 81e0649f83f56257654d0ddb2602837549b5fc89
-
-extra-deps:
-    - haskell-igraph-0.3.0
-    - drmaa-0.2.0
-    - HsHTSLib-1.3.2.0
+    - git: https://github.com/kaizhang/SciFlow.git
+      commit: 81e0649f83f56257654d0ddb2602837549b5fc89
