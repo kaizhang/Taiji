@@ -14,6 +14,8 @@ import           Bio.Pipeline.Instances            ()
 import           Bio.Utils.Functions               (scale)
 import           Bio.Utils.Misc                    (readDouble)
 import           Conduit
+import Control.Monad (replicateM)
+import Control.Monad.ST (runST)
 import           Control.Lens                      hiding (pre)
 import           Data.Binary                       (decodeFile)
 import qualified Data.ByteString.Char8             as B
@@ -27,8 +29,9 @@ import           Data.Maybe
 import qualified Data.Text                         as T
 import qualified Data.Vector.Unboxed               as U
 import           IGraph
-import           IGraph.Algorithms (pagerank)
+import           IGraph.Algorithms (pagerank, rewireEdges)
 import           Scientific.Workflow
+import Data.Vector.Algorithms.Search
 
 import           Taiji.Constants
 import           Taiji.Types
@@ -54,13 +57,17 @@ builder = do
         let genes = nubSort $ concatMap (fst . unzip) $ snd $ unzip results
             (groupNames, ranks) = unzip $ flip map results $ \(name, xs) ->
                 let geneRanks = M.fromList xs
-                in (name, flip map genes $ \g -> M.lookupDefault 0 g geneRanks)
-            dataTable = (groupNames, map original genes, transpose ranks)
-
+                in (name, flip map genes $ \g -> M.lookupDefault (0,1) g geneRanks)
         dir <- rankOutput
-        let filename = dir ++ "/TFRanks.tsv"
-        liftIO $ outputData filename dataTable
-        return filename
+        let filename1 = dir ++ "/TFRanks.tsv"
+        liftIO $ outputData filename1 (groupNames, map original genes
+            , (map.map) fst $ transpose ranks)
+
+        let filename2 = dir ++ "/TFRanks_P_values.tsv"
+        liftIO $ outputData filename2 (groupNames, map original genes
+            , (map.map) snd $ transpose ranks)
+
+        return filename1
         |] $ do
             submitToRemote .= Just False
             stateful .= True
@@ -90,22 +97,42 @@ readExpression fl cutoff = do
 pageRank :: Experiment e
          => Maybe (M.HashMap GeneName (Double, Double))   -- ^ Expression data
          -> e
-         -> IO [(GeneName, Double)]
+         -> IO [(GeneName, (Double, Double))]
 pageRank expr e = do
     gr <- buildNet e
     let labs = map (nodeLab gr) $ nodes gr
         tfs = S.fromList $ filter (not . null . pre gr) $ nodes gr
-        ranks = case expr of
-            Just expr' ->
-                let lookupExpr x = M.lookupDefault (0.01,-10) x expr'
-                    nodeWeights = exp . snd . lookupExpr
-                    gr' = emap (\((_, to), _) -> sqrt $ fst $ lookupExpr $ nodeLab gr to) gr
-                in pagerank gr' 0.85 (Just nodeWeights) (Just id)
-            Nothing -> pagerank gr 0.85 Nothing Nothing
+    (ranks, randRanks) <- case expr of
+        Just expr' -> do
+            let lookupExpr x = M.lookupDefault (0.01,-10) x expr'
+                nodeWeights = exp . snd . lookupExpr
+                gr' = emap (\((_, to), _) -> sqrt $ fst $ lookupExpr $ nodeLab gr to) gr
+                pr = pagerank gr' 0.85 (Just nodeWeights) (Just id)
+            mg <- thaw gr'
+            rpr <- replicateM 5 $ do
+                rewireEdges mg 1 False False
+                g <- unsafeFreeze mg
+                return $ pagerank g 0.85 (Just nodeWeights) (Just id)
+            return (pr, U.fromList $ reverse $ sort $ concat rpr)
+        Nothing -> do
+            let pr = pagerank gr 0.85 Nothing Nothing
+            mg <- thaw gr
+            rpr <- replicateM 5 $ do
+                rewireEdges mg 1 False False
+                g <- unsafeFreeze mg
+                return $ pagerank g 0.85 Nothing Nothing
+            return (pr, U.fromList $ reverse $ sort $ concat rpr)
     return $ flip mapMaybe (zip [0..] ranks) $ \(i, rank) ->
         if i `S.member` tfs
-            then Just (nodeLab gr i, rank)
+            then Just ( nodeLab gr i
+                      , ( rank, (fromIntegral $ bisect randRanks rank) /
+                            fromIntegral (U.length randRanks) ) )
             else Nothing
+
+bisect :: U.Vector Double -> Double -> Int
+bisect v x = runST $ do
+    v' <- U.unsafeThaw v
+    binarySearch v' x
 
 buildNet :: Experiment e => e -> IO (Graph 'D GeneName ())
 buildNet e = do

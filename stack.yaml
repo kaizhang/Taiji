@@ -14,7 +14,7 @@ extra-deps:
     - 'bio-experiments'
 
     - git:     https://github.com/kaizhang/haskell-igraph.git
-      commit:  1987cba3319db7749391dbc40131e56452e4c150
+      commit:  d8d7f6b0a315b20a00fdd3494bb3601316b5baa5
 
     - git: https://github.com/kaizhang/SciFlow.git
       commit: 81e0649f83f56257654d0ddb2602837549b5fc89

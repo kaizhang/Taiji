@@ -73,6 +73,7 @@ library
     , temporary
     , unordered-containers
     , vector
+    , vector-algorithms
     , yaml
     , zlib
     , vector-binary-instances
