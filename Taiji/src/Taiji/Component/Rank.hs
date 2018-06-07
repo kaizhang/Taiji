@@ -113,19 +113,19 @@ pageRank expr e = do
                 rewireEdges mg 1 False False
                 g <- unsafeFreeze mg
                 return $ pagerank g 0.85 (Just nodeWeights) (Just id)
-            return (pr, U.fromList $ reverse $ sort $ concat rpr)
+            return (pr, U.fromList $ sort $ concat rpr)
         Nothing -> do
             let pr = pagerank gr 0.85 Nothing Nothing
             mg <- thaw gr
-            rpr <- replicateM 5 $ do
+            rpr <- replicateM 10 $ do
                 rewireEdges mg 1 False False
                 g <- unsafeFreeze mg
                 return $ pagerank g 0.85 Nothing Nothing
-            return (pr, U.fromList $ reverse $ sort $ concat rpr)
+            return (pr, U.fromList $ sort $ concat rpr)
     return $ flip mapMaybe (zip [0..] ranks) $ \(i, rank) ->
         if i `S.member` tfs
             then Just ( nodeLab gr i
-                      , ( rank, (fromIntegral $ bisect randRanks rank) /
+                      , ( rank, 1 - (fromIntegral $ bisect randRanks rank) /
                             fromIntegral (U.length randRanks) ) )
             else Nothing
 

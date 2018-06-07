@@ -31,5 +31,4 @@ import qualified Taiji.Component.ATACSeq.CallPeak.MACS2 as CallPeak
 mainWith defaultMainOpts
     { programHeader = printf "Taiji-v%s" (showVersion version)
     } $ Initialization.builder >> ATACSeq.builder >> RNASeq.builder >>
-        TFBS.builder >> Network.builder >> Rank.builder >> CallPeak.builder >>
-        Exporter.builder
+        TFBS.builder >> Network.builder >> Rank.builder >> CallPeak.builder
